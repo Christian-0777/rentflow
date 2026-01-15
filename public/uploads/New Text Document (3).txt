@@ -1,0 +1,18 @@
+using html css js php my sql, design and build a  secure, user-friendly login system(individual)
+-(username + password) 
+-with a reliable "forgot password" and 2FA
+- add a verification via email that when i click verify, it will be directed to home page (integrate PHPMailer)
+
+- on log in page will have the email password and remember me check box, and if user doesn't have an account it will click the sign up
+- on sign up, will have the will have input for first name, input for last name, email, password, re enter password and after clicking sign up it will show the otp page what will enter the otp from email, and have an option to enable the 2FA that when user click no it will directed to home page and when user click yes it will be sending the otp on email and redirect to home page
+- use password hashing
+- when otp is enabled, every log in of user will be sended an otp that will entered by user to redirect into home page
+- on log out, when click there will be prompted that checkbox whith text, remember this device, when check 2FA is not needed, but when not checked, it will send the otp on next time log in
+
+workflow that protects user data, prevents common attacks, and provides a smooth experience on web and mobile platforms
+
+provide a full database schema
+provide folder structure
+name of this project is "calculator"
+
+home will be simple calculator

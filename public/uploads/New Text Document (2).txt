@@ -1,0 +1,11 @@
+features to add
+
+the next payment is the upcomming paymnents
+update arrears is a popup card
+if next payment is not made, it will be added to arrears
+
+features to add 
+
+example the next paymnet is done, it will show in previous payment with the remarks paid or not paid(it will add to the arrears if not paid)
+the next payment is inputed by treasury and admin and when mark as paid or not paid via dropdown options, it will pop up the card that input the next payment
+add the total arrears on the tenants table

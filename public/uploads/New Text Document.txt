@@ -1,0 +1,66 @@
+Create an rentflow website using html, css, js, php, my sql by following these:
+
+Have a two roles (Admin and Tenants Portal)
+
+on admin pov, we have a home(dashboard), tenants, payments, reports, stalls, notification(lates first), account(view profile, settings, and log out) and contact the service naviggation will be locating at the top-right corner
+on admin dashboard page
+- stall availability table (number occupied from wet, dry, apparel | number of availables from wet, dry, apparel | number of maintenance from wet, dry, apparel | total of wet? total of dry? total of apparel? | total of occupied? total of under maintenance? total of available?)
+- upcomming payments table (stall no., tenant's name, bussiness name, ammount, date, remarks(paid, not paid))
+- revenue highligts (highest, lowest, average)
+- recent payents (stall no., tenant's name, bussiness name, ammount, date, remarks(how many days late, it is on time?) date, payment method)
+
+on admin tenant list page
+- have a serch funciton for tenants name, business name, stall no.
+- table consist of stall no., tenant's name, bussiness name, status(active, inactive), total paid, previous payments(date and ammount)
+- include filters for stall no.(ascending, descending), name(ascending, descending), bussiness name(ascending, descending), status(active, innactive, lease ended), total paid(highest to lowest, lowest to highest)
+
+on admin pov for tenant profile page
+- facebook like layout for profile with cover photo, including name, status,  message button, his/her stall no., location, bussiness name, and lease duration.
+- payment summary contains of nest payment(ammount and date), total paid, last payment(ammount and date), arrears left    
+
+on admin payment record page
+- table consist of stall no., tenant's name, bussiness name, total arrears, next payment(date and ammount), paid status(paid, if payment not make before or the day of date in next payment will be added to total arrears)
+
+on admin report page
+- can generate a csv or any excel file for date, total revenue, total collected, total balances from arrears of tenants.   
+- have a pie chart of stall availability table (percent of occupied from wet, dry, apparel | precent of availables from wet, dry, apparel | percent of maintenance from wet, dry, appare. can export as png or pdf 
+- list of new tenant (date of start of his/her lease, name, bussiness name, stall no. include location)
+- have a monthly revenue column chart that could export to png or pdf
+- have a yearly revenue column chart that could export to png or pdf
+
+on admin stall page
+- can add stalls
+- filter the stall list
+- can release an stall by inputing the tenant's full name, tenant's contact number, tenant's email that used for creation of tenant portal account, what is bussiness type?(wet, dry, apparel), upload a picture or pdf of tenat's bussiness permit, upload an picture of tenant's valid id and image of tenant's signature.
+- only admin can access this including stall details, their locattion while tenant can see how many available stalls that could be seen as landing page after searching the rentflow website as a tenant
+- dispatch a notification to tenants for termination or payment deadlines
+
+on tenants, we have home(tenat's dashboard), payment, stall(to see available stalls), notification(latest first), account(view profile, settings, logout), custumer service that able to talk with support and talk with admin(this will be displayed on admin's notification) navigation located on left of the page as a menu sidebar
+tenants pages have the mobile and desktop auto layout
+on tenants portal dashboard page
+- Rent summary with Next payment (ammount and date), last payment(ammount and date, include late penalty), and total arrears
+- new accounts for tenants will have a confirmation via email, and after clicking confirm on email it will be prompt the User Terms and Agreements that would be accepted by tenant.
+
+on tenants payment page 
+- Upcomming payment (amount, due, arrears, late penalty)
+- recent paid(total arrears, last payment made(ammount, date), penalty applied)
+- transaction history table wit date, ammount, payment method, transaction id, and able to view receipt
+
+on tenants portal profile page
+- facebook like layout for profile with cover photo, including name, status,  edit profile button, his/her stall no., location, bussiness name, and lease duration.
+
+can register and login account for tenats while admin and treasury was using just one on any 3 code provided to log in
+
+portal page for Treasury that update the arrears and balances
+
+Late penalty logic: add a cron or daily job to compute penalties when CURDATE() > due_date and update arrears.total_arrears
+Email confirmation uses a stub via notifications—swap with PHPMailer in config/mailer.php
+tenant self-service for stall applications
+PHPMailer for real emails.
+Database must be ready to restore
+
+note:
+full chat (tenant↔admin) and display chats as notifications.
+add sample of landing page that would be before proceed to login or register of tenants
+
+make a comments to every blocks of code for easy clarification and understanding

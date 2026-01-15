@@ -1,0 +1,104 @@
+@echo off
+set ROOT=rentflow
+
+echo Creating RentFlow folder structure...
+
+REM Root folders
+mkdir %ROOT%
+mkdir %ROOT%\config
+mkdir %ROOT%\public
+mkdir %ROOT%\api
+mkdir %ROOT%\storage
+mkdir %ROOT%\sql
+
+REM Config files
+type nul > %ROOT%\config\db.php
+type nul > %ROOT%\config\app.php
+type nul > %ROOT%\config\auth.php
+
+REM Public root files
+type nul > %ROOT%\public\index.php
+type nul > %ROOT%\public\login.php
+type nul > %ROOT%\public\register.php
+type nul > %ROOT%\public\logout.php
+
+REM Assets
+mkdir %ROOT%\public\assets
+mkdir %ROOT%\public\assets\css
+mkdir %ROOT%\public\assets\js
+mkdir %ROOT%\public\assets\imgs
+mkdir %ROOT%\public\assets\vendor
+
+REM CSS files
+type nul > %ROOT%\public\assets\css\base.css
+type nul > %ROOT%\public\assets\css\admin.css
+type nul > %ROOT%\public\assets\css\tenant.css
+
+REM JS files
+type nul > %ROOT%\public\assets\js\main.js
+type nul > %ROOT%\public\assets\js\charts.js
+type nul > %ROOT%\public\assets\js\chat.js
+type nul > %ROOT%\public\assets\js\notifications.js
+
+REM Image placeholders
+type nul > %ROOT%\public\assets\imgs\sample-cover.jpg
+type nul > %ROOT%\public\assets\imgs\logo.png
+
+REM Vendor files
+type nul > %ROOT%\public\assets\vendor\chart.min.js
+type nul > %ROOT%\public\assets\vendor\papaparse.min.js
+
+REM Admin pages
+mkdir %ROOT%\public\admin
+mkdir %ROOT%\public\admin\partials
+
+type nul > %ROOT%\public\admin\dashboard.php
+type nul > %ROOT%\public\admin\tenants.php
+type nul > %ROOT%\public\admin\tenant_profile.php
+type nul > %ROOT%\public\admin\payments.php
+type nul > %ROOT%\public\admin\reports.php
+type nul > %ROOT%\public\admin\stalls.php
+type nul > %ROOT%\public\admin\notifications.php
+type nul > %ROOT%\public\admin\account.php
+type nul > %ROOT%\public\admin\contact_service.php
+
+type nul > %ROOT%\public\admin\partials\header.php
+type nul > %ROOT%\public\admin\partials\footer.php
+
+REM Tenant pages
+mkdir %ROOT%\public\tenant
+mkdir %ROOT%\public\tenant\partials
+
+type nul > %ROOT%\public\tenant\dashboard.php
+type nul > %ROOT%\public\tenant\payments.php
+type nul > %ROOT%\public\tenant\stalls.php
+type nul > %ROOT%\public\tenant\notifications.php
+type nul > %ROOT%\public\tenant\account.php
+type nul > %ROOT%\public\tenant\customer_service.php
+
+type nul > %ROOT%\public\tenant\partials\header.php
+type nul > %ROOT%\public\tenant\partials\footer.php
+
+REM API
+type nul > %ROOT%\api\chat_send.php
+type nul > %ROOT%\api\chat_fetch.php
+type nul > %ROOT%\api\notifications_fetch.php
+type nul > %ROOT%\api\export_csv.php
+type nul > %ROOT%\api\stalls_fetch.php
+type nul > %ROOT%\api\payment_actions.php
+type nul > %ROOT%\api\upload.php
+type nul > %ROOT%\api\auth_email_confirm.php
+
+REM Storage
+mkdir %ROOT%\storage\uploads
+mkdir %ROOT%\storage\uploads\permits
+mkdir %ROOT%\storage\uploads\ids
+mkdir %ROOT%\storage\uploads\signatures
+
+REM SQL
+type nul > %ROOT%\sql\schema.sql
+type nul > %ROOT%\sql\seed.sql
+
+echo.
+echo RentFlow structure created successfully.
+pause

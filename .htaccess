@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect /admin to admin/login.php
+    RewriteRule ^admin/?$ admin/login.php [L]
+    
+    # Redirect root to public/index.php
+    RewriteCond %{REQUEST_URI} !^/admin
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/index.php [L]
+</IfModule>
