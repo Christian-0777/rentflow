@@ -178,13 +178,7 @@ $reset_link = "https://yourdomain.com/public/reset_password.php?token=" . urlenc
 
 - [x] Two-factor authentication (2FA)
 - [x] Trusted device management
-- [ ] Session management improvements
-- [ ] Email verification for new accounts
-- [ ] Account lockout after failed login attempts
-- [ ] Password strength indicator
-- [ ] Security audit logs
-- [ ] API rate limiting
-- [ ] CORS security headers
+- [ ] App Rating
 
 ---
 
