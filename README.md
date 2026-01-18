@@ -79,72 +79,43 @@ composer install
 
 ---
 
-## **5. Configure `mailer.php`**
+## **5. Configure Environment Variables**
 
-1. Place `mailer.php` inside `rentflow/config`.
-2. Edit it with your Gmail credentials:
+1. Copy the example environment file:
 
-```php
-<?php
-// config/mailer.php
-// PHPMailer SMTP configuration for sending real emails
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-// Make sure PHPMailer is installed via Composer:
-//   composer require phpmailer/phpmailer
-require __DIR__ . '/../vendor/autoload.php';
-
-// SMTP Configuration Constants
-define('MAIL_HOST', 'smtp.gmail.com');
-define('MAIL_PORT', 587);
-define('MAIL_USERNAME', 'your_email@gmail.com');  // SMTP username
-define('MAIL_PASSWORD', 'your_app_password');     // SMTP username
-define('MAIL_FROM', 'no-reply@rentflow.local');
-
-/**
- * Send an email using PHPMailer + SMTP
- *
- * @param string $to Recipient email address
- * @param string $subject Email subject
- * @param string $body HTML body content
- * @return bool True if sent successfully, false otherwise
- */
-function send_mail($to, $subject, $body) {
-    $mail = new PHPMailer(true);
-
-    try {
-        // Server settings
-        $mail->isSMTP();                                      // Use SMTP
-        $mail->Host       = 'smtp.gmail.com';                 // SMTP server (e.g., smtp.gmail.com)
-        $mail->SMTPAuth   = true;                             // Enable authentication
-        $mail->Username   = 'your_email@gmail.com';           // SMTP username
-        $mail->Password   = 'your_app_password';              // SMTP password or app password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;   // Encryption (TLS recommended)
-        $mail->Port       = 587;                              // TCP port (587 for TLS, 465 for SSL)
-
-        // Sender info
-        $mail->setFrom('no-reply@rentflow.local', 'Rentflow Team');
-
-        // Recipient
-        $mail->addAddress($to);
-
-        // Content
-        $mail->isHTML(true);                                  // Set email format to HTML
-        $mail->Subject = $subject;
-        $mail->Body    = $body;
-        $mail->AltBody = strip_tags($body);                   // Fallback plain text
-
-        // Send email
-        return $mail->send();
-
-    } catch (Exception $e) {
-        error_log("Mailer Error: {$mail->ErrorInfo}");
-        return false;
-    }
-}
+```bash
+cd C:\xampp\htdocs\rentflow
+copy .env.example .env
 ```
+
+2. Edit the `.env` file with your actual configuration:
+
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_NAME=rentflow
+DB_USER=root
+DB_PASS=
+
+# SMTP Configuration
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_FROM=no-reply@rentflow.local
+MAIL_FROM_NAME=Rentflow Team
+
+# Application Settings
+APP_ENV=development
+APP_DEBUG=true
+APP_NAME=RentFlow
+
+# Penalty Configuration
+PENALTY_RATE=0.02
+```
+
+3. The configuration will be automatically loaded by the application.
+
 ## **6. To get the your_email@gmail.com and your_app_password
 * Gmail App Password Setup
 * Enable 2-Step Verification on Google Account
