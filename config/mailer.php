@@ -5,16 +5,20 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+// Load environment variables
+require_once __DIR__ . '/env.php';
+
 // Make sure PHPMailer is installed via Composer:
 //   composer require phpmailer/phpmailer
 require __DIR__ . '/../vendor/autoload.php';
 
 // SMTP Configuration Constants
-define('MAIL_HOST', 'smtp.gmail.com');
-define('MAIL_PORT', 587);
-define('MAIL_USERNAME', 'your_email@gmail.com');
-define('MAIL_PASSWORD', 'your_app_password'); // Use an app password if 2FA is enabled
-define('MAIL_FROM', 'no-reply@rentflow.local');
+define('MAIL_HOST', env('MAIL_HOST', 'smtp.gmail.com'));
+define('MAIL_PORT', env('MAIL_PORT', 587));
+define('MAIL_USERNAME', env('MAIL_USERNAME', 'no-reply@rentflow.local'));
+define('MAIL_PASSWORD', env('MAIL_PASSWORD', '')); // Use an app password if 2FA is enabled
+define('MAIL_FROM', env('MAIL_FROM', 'no-reply@rentflow.local'));
+define('MAIL_FROM_NAME', env('MAIL_FROM_NAME', 'Rentflow Team'));
 
 /**
  * Send an email using PHPMailer + SMTP
@@ -30,15 +34,15 @@ function send_mail($to, $subject, $body) {
     try {
         // Server settings
         $mail->isSMTP();                                      // Use SMTP
-        $mail->Host       = 'smtp.gmail.com';        // SMTP server (e.g., smtp.gmail.com)
+        $mail->Host       = MAIL_HOST;                        // SMTP server (e.g., smtp.gmail.com)
         $mail->SMTPAuth   = true;                             // Enable authentication
-        $mail->Username   = 'your_email@gmail.com';         // SMTP username
-        $mail->Password   = 'your_app_password';  // SMTP password or app password
+        $mail->Username   = MAIL_USERNAME;                    // SMTP username
+        $mail->Password   = MAIL_PASSWORD;                    // SMTP password or app password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;   // Encryption (TLS recommended)
-        $mail->Port       = 587;                              // TCP port (587 for TLS, 465 for SSL)
+        $mail->Port       = MAIL_PORT;                        // TCP port (587 for TLS, 465 for SSL)
 
         // Sender info
-        $mail->setFrom('no-reply@rentflow.local', 'Rentflow Team');
+        $mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
 
         // Recipient
         $mail->addAddress($to);

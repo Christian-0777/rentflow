@@ -4,6 +4,8 @@ require_once __DIR__.'/../config/auth.php';
 require_role('admin');
 
 $msg = '';
+$redirectUrl = null;
+
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])) {
   if ($_POST['action']==='add') {
     $type = $_POST['type'];
@@ -31,18 +33,65 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])) {
     $stmt = $pdo->prepare("INSERT INTO stalls (stall_no, type, location, status, picture_path) VALUES (?,?,?,?,?)");
     $stmt->execute([$stallNo, $_POST['type'], $_POST['location'], $_POST['status'], $picturePath]);
     $msg = "Stall {$stallNo} added.";
+    $redirectUrl = "stalls.php";
   }
   if ($_POST['action']==='remove') {
-    $stallNo = (int)$_POST['stall_no'];
+    $stallNo = $_POST['stall_no'];
+    
+    // Get stall details to delete picture file
+    $stmt = $pdo->prepare("SELECT picture_path FROM stalls WHERE stall_no=?");
+    $stmt->execute([$stallNo]);
+    $stall = $stmt->fetch();
+    
+    // Delete picture file if exists
+    if ($stall && $stall['picture_path']) {
+      $picFile = __DIR__ . '/../' . ltrim($stall['picture_path'], '/');
+      if (file_exists($picFile)) {
+        unlink($picFile);
+      }
+    }
+    
+    // Delete from database
     $pdo->prepare("DELETE FROM stalls WHERE stall_no=?")->execute([$stallNo]);
-    $msg = "Stall #{$stallNo} removed.";
+    $msg = "Stall {$stallNo} removed successfully.";
+    $redirectUrl = "stalls.php";
   }
   if ($_POST['action']==='edit') {
     $stallNo = $_POST['stall_no'];
     $type = $_POST['type'];
     $status = $_POST['status'];
-    $pdo->prepare("UPDATE stalls SET type=?, status=? WHERE stall_no=?")->execute([$type, $status, $stallNo]);
+    
+    // Get current stall info
+    $stmt = $pdo->prepare("SELECT picture_path FROM stalls WHERE stall_no=?");
+    $stmt->execute([$stallNo]);
+    $currentStall = $stmt->fetch();
+    $picturePath = $currentStall['picture_path'];
+    
+    // Handle picture upload/replacement
+    if (isset($_FILES['picture']) && $_FILES['picture']['error'] === UPLOAD_ERR_OK) {
+      // Delete old picture if exists
+      if ($currentStall['picture_path']) {
+        $oldPicFile = __DIR__ . '/../' . ltrim($currentStall['picture_path'], '/');
+        if (file_exists($oldPicFile)) {
+          unlink($oldPicFile);
+        }
+      }
+      
+      // Upload new picture
+      $uploadDir = __DIR__ . '/../uploads/stalls/';
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+      }
+      $fileName = $stallNo . '_' . time() . '.' . pathinfo($_FILES['picture']['name'], PATHINFO_EXTENSION);
+      $filePath = $uploadDir . $fileName;
+      if (move_uploaded_file($_FILES['picture']['tmp_name'], $filePath)) {
+        $picturePath = '/rentflow/uploads/stalls/' . $fileName;
+      }
+    }
+    
+    $pdo->prepare("UPDATE stalls SET type=?, status=?, picture_path=? WHERE stall_no=?")->execute([$type, $status, $picturePath, $stallNo]);
     $msg = "Stall {$stallNo} updated.";
+    $redirectUrl = "stalls.php";
   }
   if ($_POST['action']==='assign') {
     $tenantId = (int)$_POST['tenant_id'];
@@ -74,8 +123,14 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])) {
         ->execute([$_SESSION['user']['id'], $tenantId]);
 
     $msg = "Stall {$stallNo} assigned to tenant.";
+    $redirectUrl = "stalls.php";
   }
-  // ... release logic unchanged ...
+  
+  // Redirect after POST to prevent form resubmission
+  if ($redirectUrl) {
+    header("Location: " . $redirectUrl);
+    exit;
+  }
 }
 
 // Filters
@@ -135,7 +190,7 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
     if ($stall): ?>
   <section class="card">
     <h3>Edit Stall <?= htmlspecialchars($stall['stall_no']) ?></h3>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
       <input type="hidden" name="action" value="edit">
       <input type="hidden" name="stall_no" value="<?= htmlspecialchars($stall['stall_no']) ?>">
       <select name="type" required>
@@ -148,6 +203,13 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
         <option value="occupied" <?= $stall['status']=='occupied'?'selected':'' ?>>Occupied</option>
         <option value="maintenance" <?= $stall['status']=='maintenance'?'selected':'' ?>>Maintenance</option>
       </select>
+      <div style="margin-top: 15px;">
+        <label for="edit_picture">Replace Picture:</label>
+        <input type="file" name="picture" id="edit_picture" accept="image/*">
+        <?php if ($stall['picture_path']): ?>
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">Current picture: <img src="<?= htmlspecialchars($stall['picture_path']) ?>" alt="Current Picture" style="width: 80px; height: 80px; object-fit: cover; margin-top: 5px;"></p>
+        <?php endif; ?>
+      </div>
       <button class="btn">Update</button>
       <a href="stalls.php?type=<?= urlencode($type) ?>&status=<?= urlencode($status) ?>" class="btn">Cancel</a>
     </form>
@@ -200,7 +262,7 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
         <td><?= htmlspecialchars(strtoupper($s['status'])) ?></td>
         <td>
           <?php if ($s['picture_path']): ?>
-            <img src="<?= htmlspecialchars($s['picture_path']) ?>" alt="Stall Picture" style="max-width: 100px; max-height: 100px;">
+            <img src="<?= htmlspecialchars($s['picture_path']) ?>" alt="Stall Picture" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;" onclick="openImageModal('<?= htmlspecialchars($s['picture_path']) ?>', '<?= htmlspecialchars($s['stall_no']) ?>')">
           <?php else: ?>
             No Picture
           <?php endif; ?>
@@ -246,6 +308,15 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
   </div>
 </div>
 
+<!-- Image Viewer Modal -->
+<div id="imageModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 90%; width: auto; text-align: center;">
+    <span onclick="closeImageModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    <h3 id="imageModalTitle">Stall Picture</h3>
+    <img id="modalImage" src="" alt="Stall Picture" style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+  </div>
+</div>
+
 <footer class="footer"><p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p></footer>
 
 <script src="/rentflow/public/assets/js/table.js"></script>
@@ -258,10 +329,26 @@ function closeAddStallModal() {
   document.getElementById('addStallModal').style.display = 'none';
 }
 
-// Close modal when clicking outside
+function openImageModal(imagePath, stallNo) {
+  document.getElementById('modalImage').src = imagePath;
+  document.getElementById('imageModalTitle').textContent = 'Stall ' + stallNo + ' - Original Size';
+  document.getElementById('imageModal').style.display = 'block';
+}
+
+function closeImageModal() {
+  document.getElementById('imageModal').style.display = 'none';
+}
+
+// Close modals when clicking outside
 window.onclick = function(event) {
-  if (event.target == document.getElementById('addStallModal')) {
+  const addStallModal = document.getElementById('addStallModal');
+  const imageModal = document.getElementById('imageModal');
+  
+  if (event.target == addStallModal) {
     closeAddStallModal();
+  }
+  if (event.target == imageModal) {
+    closeImageModal();
   }
 }
 </script>

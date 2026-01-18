@@ -53,7 +53,6 @@ $user = $info->fetch();
         <h1><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></h1>
         <p>Status: <span class="badge"><?= htmlspecialchars(strtoupper($user['status'])) ?></span></p>
         <a class="btn small" href="account.php">Edit profile</a>
-        <a class="btn small outline" href="account.php">Settings</a> <!-- ✅ Settings button -->
       </div>
     </div>
   </div>

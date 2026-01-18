@@ -1,6 +1,6 @@
 <?php
 // admin/reports.php
-// CSV export, pie chart of availability, monthly/yearly revenue charts
+// Admin reports with revenue analytics, stall availability, and new tenants
 
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
@@ -8,73 +8,158 @@ require_once __DIR__.'/../config/auth.php';
 // ✅ Use plain string for role check
 require_role('admin');
 
-// Availability by type/status
-$avail = $pdo->query("
-  SELECT type,
-    SUM(status='occupied') AS occupied,
-    SUM(status='available') AS available,
-    SUM(status='maintenance') AS maintenance
-  FROM stalls GROUP BY type
+// Handle CSV/Excel export
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['export']) && $_GET['export'] === 'revenue_csv') {
+    // Get revenue data
+    $revenue_data = $pdo->query("
+        SELECT 
+            DATE(p.payment_date) as date,
+            SUM(p.amount) as total_revenue,
+            (SELECT SUM(amount) FROM payments WHERE DATE(payment_date) = DATE(p.payment_date)) as total_collected,
+            (SELECT COALESCE(SUM(total_arrears), 0) FROM arrears WHERE DATE(last_updated) <= DATE(p.payment_date)) as total_balances
+        FROM payments p
+        GROUP BY DATE(p.payment_date)
+        ORDER BY DATE(p.payment_date) DESC
+    ")->fetchAll();
+
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="revenue_report_' . date('Y-m-d') . '.csv"');
+    
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Date', 'Total Revenue', 'Total Collected', 'Total Balances']);
+    
+    foreach ($revenue_data as $row) {
+        fputcsv($output, [
+            $row['date'],
+            number_format($row['total_revenue'], 2),
+            number_format($row['total_collected'], 2),
+            number_format($row['total_balances'], 2)
+        ]);
+    }
+    
+    fclose($output);
+    exit;
+}
+
+// Handle XLSX export using simple method (tab-separated for Excel compatibility)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['export']) && $_GET['export'] === 'revenue_xlsx') {
+    $revenue_data = $pdo->query("
+        SELECT 
+            DATE(p.payment_date) as date,
+            SUM(p.amount) as total_revenue,
+            (SELECT SUM(amount) FROM payments WHERE DATE(payment_date) = DATE(p.payment_date)) as total_collected,
+            (SELECT COALESCE(SUM(total_arrears), 0) FROM arrears WHERE DATE(last_updated) <= DATE(p.payment_date)) as total_balances
+        FROM payments p
+        GROUP BY DATE(p.payment_date)
+        ORDER BY DATE(p.payment_date) DESC
+    ")->fetchAll();
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="revenue_report_' . date('Y-m-d') . '.xlsx"');
+    
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Date', 'Total Revenue', 'Total Collected', 'Total Balances'], "\t");
+    
+    foreach ($revenue_data as $row) {
+        fputcsv($output, [
+            $row['date'],
+            number_format($row['total_revenue'], 2),
+            number_format($row['total_collected'], 2),
+            number_format($row['total_balances'], 2)
+        ], "\t");
+    }
+    
+    fclose($output);
+    exit;
+}
+
+// Get overall revenue statistics
+$stats = $pdo->query("
+    SELECT 
+        SUM(p.amount) as total_revenue,
+        SUM(p.amount) as total_collected,
+        COALESCE(SUM(a.total_arrears), 0) as total_balances
+    FROM payments p
+    LEFT JOIN arrears a ON 1=1
+")->fetch();
+
+// Get stall availability breakdown
+$stall_availability = $pdo->query("
+    SELECT 
+        type,
+        status,
+        COUNT(*) as count
+    FROM stalls
+    GROUP BY type, status
 ")->fetchAll();
 
-// Monthly revenue (last 12 months)
-$monthly = $pdo->query("
-  SELECT DATE_FORMAT(payment_date,'%Y-%m') AS ym, SUM(amount) AS total
-  FROM payments
-  WHERE payment_date>=DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-  GROUP BY ym ORDER BY ym
+// Process stall data for pie chart
+$stall_breakdown = [];
+foreach ($stall_availability as $row) {
+    $key = ucfirst($row['type']);
+    if (!isset($stall_breakdown[$key])) {
+        $stall_breakdown[$key] = ['occupied' => 0, 'available' => 0, 'maintenance' => 0, 'total' => 0];
+    }
+    $stall_breakdown[$key][$row['status']] = $row['count'];
+    $stall_breakdown[$key]['total'] += $row['count'];
+}
+
+// Get new tenants (last 30 days)
+$new_tenants = $pdo->query("
+    SELECT 
+        u.id,
+        CONCAT(u.first_name, ' ', u.last_name) as tenant_name,
+        u.business_name,
+        l.lease_start,
+        s.stall_no,
+        s.type,
+        s.location
+    FROM users u
+    JOIN leases l ON u.id = l.tenant_id
+    JOIN stalls s ON l.stall_id = s.id
+    WHERE u.role = 'tenant' 
+    AND l.lease_start >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    ORDER BY l.lease_start DESC
 ")->fetchAll();
 
-// Yearly revenue (last 5 years)
-$yearly = $pdo->query("
-  SELECT YEAR(payment_date) AS y, SUM(amount) AS total
-  FROM payments
-  GROUP BY y ORDER BY y DESC LIMIT 5
+// Get monthly revenue data for chart
+$monthly_revenue = $pdo->query("
+    SELECT 
+        DATE_FORMAT(p.payment_date, '%Y-%m') as month,
+        DATE_FORMAT(p.payment_date, '%M %Y') as month_label,
+        SUM(p.amount) as total
+    FROM payments p
+    WHERE p.payment_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY DATE_FORMAT(p.payment_date, '%Y-%m')
+    ORDER BY DATE_FORMAT(p.payment_date, '%Y-%m') ASC
 ")->fetchAll();
 
-// Revenue summary for CSV
-$summary = $pdo->query("
-  SELECT p.payment_date AS date,
-         SUM(p.amount) AS total_revenue,
-         SUM(p.amount) AS total_collected,
-         (SELECT SUM(total_arrears) FROM arrears) AS total_balances
-  FROM payments p
-  GROUP BY p.payment_date
-  ORDER BY p.payment_date DESC
-  LIMIT 30
+// Get yearly revenue data for chart
+$yearly_revenue = $pdo->query("
+    SELECT 
+        YEAR(p.payment_date) as year,
+        SUM(p.amount) as total
+    FROM payments p
+    GROUP BY YEAR(p.payment_date)
+    ORDER BY YEAR(p.payment_date) ASC
 ")->fetchAll();
 
-// Recently approved applications (last 30 days)
-$approvedApps = $pdo->query("
-  SELECT 
-    sa.id,
-    CONCAT(u.first_name, ' ', u.last_name) AS tenant_name,
-    u.tenant_id,
-    u.email,
-    u.business_name,
-    sa.type,
-    sa.created_at AS application_date,
-    sa.status
-  FROM stall_applications sa
-  JOIN users u ON sa.tenant_id = u.id
-  WHERE sa.status = 'approved' 
-  AND sa.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-  ORDER BY sa.created_at DESC
-")->fetchAll();
+// Prepare chart data as JSON
+$monthly_labels = array_map(fn($r) => $r['month_label'], $monthly_revenue);
+$monthly_values = array_map(fn($r) => (float)$r['total'], $monthly_revenue);
+$yearly_labels = array_map(fn($r) => $r['year'], $yearly_revenue);
+$yearly_values = array_map(fn($r) => (float)$r['total'], $yearly_revenue);
 
-// Prepare approved applications data for CSV export
-$approvedExportData = [];
-foreach ($approvedApps as $app) {
-  $approvedExportData[] = [
-    'Application ID' => $app['id'],
-    'Tenant Name' => $app['tenant_name'],
-    'Tenant ID' => $app['tenant_id'],
-    'Email' => $app['email'],
-    'Business Name' => $app['business_name'],
-    'Stall Type' => $app['type'],
-    'Application Date' => $app['application_date'],
-    'Status' => $app['status']
-  ];
+// Prepare stall chart labels and values
+$stall_labels = [];
+$stall_values = [];
+foreach ($stall_breakdown as $type => $data) {
+  $stall_labels[] = $type . ' - Occupied';
+  $stall_values[] = $data['occupied'];
+  $stall_labels[] = $type . ' - Available';
+  $stall_values[] = $data['available'];
+  $stall_labels[] = $type . ' - Maintenance';
+  $stall_values[] = $data['maintenance'];
 }
 ?>
 <!DOCTYPE html>
@@ -85,7 +170,11 @@ foreach ($approvedApps as $app) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
 </head>
 <body class="admin">
 
@@ -109,96 +198,154 @@ foreach ($approvedApps as $app) {
 </header>
 
 <main class="content">
-  <h1>Reports</h1>
+  <h1>Reports & Analytics</h1>
 
-  <section class="actions">
-    <button class="btn" onclick="showExportModal('revenue', 'Revenue Data')">Export Revenue Data</button>
+  <!-- � Full Page Export Buttons -->
+  <section class="export-full-page">
+    <h3>Export Full Report</h3>
+    <button class="btn" onclick="exportPageAsWord()">📄 Export as Word</button>
+    <button class="btn" onclick="exportPageAsPDF()">📑 Export as PDF</button>
+    <button class="btn" onclick="exportPageAsGoogleDocs()">📗 Open in Google Docs</button>
   </section>
 
-  <?php if (!empty($approvedApps)): ?>
-  <section class="card">
-    <h3>Recently Approved Applications (Last 30 Days)</h3>
+  <!-- 👥 New Tenants Section -->
+  <section class="report-section">
+    <h2>New Tenants (Last 30 Days)</h2>
     <table class="table">
       <thead>
         <tr>
-          <th>Application ID</th>
+          <th>Lease Start Date</th>
           <th>Tenant Name</th>
-          <th>Tenant ID</th>
-          <th>Email</th>
           <th>Business Name</th>
+          <th>Stall No</th>
           <th>Stall Type</th>
-          <th>Application Date</th>
-          <th>Status</th>
+          <th>Location</th>
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($approvedApps as $app): ?>
-        <tr>
-          <td><?= htmlspecialchars($app['id']) ?></td>
-          <td><?= htmlspecialchars($app['tenant_name']) ?></td>
-          <td><?= htmlspecialchars($app['tenant_id']) ?></td>
-          <td><?= htmlspecialchars($app['email']) ?></td>
-          <td><?= htmlspecialchars($app['business_name']) ?></td>
-          <td><?= htmlspecialchars($app['type']) ?></td>
-          <td><?= htmlspecialchars($app['application_date']) ?></td>
-          <td><span class="badge success"><?= htmlspecialchars(strtoupper($app['status'])) ?></span></td>
-        </tr>
-        <?php endforeach; ?>
+        <?php if (count($new_tenants) > 0): ?>
+          <?php foreach ($new_tenants as $tenant): ?>
+            <tr>
+              <td><?= htmlspecialchars($tenant['lease_start']) ?></td>
+              <td><?= htmlspecialchars($tenant['tenant_name']) ?></td>
+              <td><?= htmlspecialchars($tenant['business_name'] ?? '—') ?></td>
+              <td><?= htmlspecialchars($tenant['stall_no']) ?></td>
+              <td><span class="badge"><?= ucfirst(htmlspecialchars($tenant['type'])) ?></span></td>
+              <td><?= htmlspecialchars($tenant['location']) ?></td>
+            </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr>
+            <td colspan="6" style="text-align: center; color: #666;">No new tenants in the last 30 days</td>
+          </tr>
+        <?php endif; ?>
       </tbody>
     </table>
-    <div class="export" style="margin-top: 15px; text-align: center;">
-      <button class="btn" onclick="showExportModal('approved_apps', 'Approved Applications')">Export Approved Applications</button>
+  </section>
+
+  <!-- 🥧 Stall Availability Chart -->
+  <section class="report-section">
+    <div class="chart-header">
+      <div>
+        <h2>Stall Availability Breakdown</h2>
+        <div class="chart-type-toggle">
+          <button class="chart-type-btn active" data-type="doughnut" onclick="switchChartType('stallAvailabilityChart', 'doughnut', this)">Pie Chart</button>
+          <button class="chart-type-btn" data-type="bar" onclick="switchChartType('stallAvailabilityChart', 'bar', this)">Bar Chart</button>
+          <button class="chart-type-btn" data-type="line" onclick="switchChartType('stallAvailabilityChart', 'line', this)">Line Chart</button>
+        </div>
+      </div>
+      <div>
+        <button class="btn small" onclick="exportChartAsPNG('stallAvailabilityChart', 'stall_availability')">📊 Export PNG</button>
+        <button class="btn small" onclick="exportChartAsPDF('stallAvailabilityChart', 'stall_availability')">📄 Export PDF</button>
+      </div>
+    </div>
+    
+    <div class="stall-chart-container">
+      <canvas id="stallAvailabilityChart" width="100" height="80"></canvas>
+    </div>
+
+    <div class="stall-breakdown-table">
+      <h3>Stall Availability Details</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Occupied</th>
+            <th>Available</th>
+            <th>Maintenance</th>
+            <th>Total</th>
+            <th>Occupied %</th>
+            <th>Available %</th>
+            <th>Maintenance %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($stall_breakdown as $type => $data): 
+            $total = $data['total'];
+            $occupied_pct = $total > 0 ? round(($data['occupied'] / $total) * 100, 1) : 0;
+            $available_pct = $total > 0 ? round(($data['available'] / $total) * 100, 1) : 0;
+            $maintenance_pct = $total > 0 ? round(($data['maintenance'] / $total) * 100, 1) : 0;
+          ?>
+            <tr>
+              <td><strong><?= htmlspecialchars($type) ?></strong></td>
+              <td><?= $data['occupied'] ?></td>
+              <td><?= $data['available'] ?></td>
+              <td><?= $data['maintenance'] ?></td>
+              <td><?= $total ?></td>
+              <td><?= $occupied_pct ?>%</td>
+              <td><?= $available_pct ?>%</td>
+              <td><?= $maintenance_pct ?>%</td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
   </section>
-  <?php endif; ?>
 
-  <section class="grid">
-    <div class="card">
-      <h3>Stall availability</h3>
-      <div class="chart-controls" style="margin-bottom: 10px; text-align: center;">
-        <label for="pieAvailType">Chart Type: </label>
-        <select id="pieAvailType" onchange="changeChartType('pieAvail', this.value)">
-          <option value="pie">Pie Chart</option>
-          <option value="doughnut">Doughnut Chart</option>
-          <option value="bar">Bar Chart</option>
-        </select>
+  <!-- 📈 Monthly Revenue Chart -->
+  <section class="report-section">
+    <div class="chart-header">
+      <h2>Monthly Revenue</h2>
+      <button class="btn small" onclick="exportChartAsPNG('monthlyRevenueChart', 'monthly_revenue')">📊 Export PNG</button>
+      <button class="btn small" onclick="exportChartAsPDF('monthlyRevenueChart', 'monthly_revenue')">📄 Export PDF</button>
+    </div>
+    <canvas id="monthlyRevenueChart" width="100" height="40"></canvas>
+  </section>
+
+  <!-- 📈 Yearly Revenue Chart -->
+  <section class="report-section">
+    <div class="chart-header">
+      <h2>Yearly Revenue</h2>
+      <button class="btn small" onclick="exportChartAsPNG('yearlyRevenueChart', 'yearly_revenue')">📊 Export PNG</button>
+      <button class="btn small" onclick="exportChartAsPDF('yearlyRevenueChart', 'yearly_revenue')">📄 Export PDF</button>
+    </div>
+    <canvas id="yearlyRevenueChart" width="100" height="40"></canvas>
+  </section>
+
+  <!-- �📊 Revenue Summary Section -->
+  <section class="report-section">
+    <h2>Revenue Summary</h2>
+    <div class="revenue-stats">
+      <div class="stat-card">
+        <h3>Total Revenue</h3>
+        <p class="stat-value">₱<?= number_format($stats['total_revenue'] ?? 0, 2) ?></p>
       </div>
-      <canvas id="pieAvail"></canvas>
-      <div class="export">
-        <button class="btn small" onclick="showExportModal('chart', 'Stall Availability Chart', 'pieAvail')">Export Chart</button>
+      <div class="stat-card">
+        <h3>Total Collected</h3>
+        <p class="stat-value">₱<?= number_format($stats['total_collected'] ?? 0, 2) ?></p>
+      </div>
+      <div class="stat-card">
+        <h3>Total Balances</h3>
+        <p class="stat-value">₱<?= number_format($stats['total_balances'] ?? 0, 2) ?></p>
       </div>
     </div>
 
-    <div class="card">
-      <h3>Monthly revenue</h3>
-      <div class="chart-controls" style="margin-bottom: 10px; text-align: center;">
-        <label for="monthlyRevenueType">Chart Type: </label>
-        <select id="monthlyRevenueType" onchange="changeChartType('monthlyRevenue', this.value)">
-          <option value="bar">Bar Chart</option>
-          <option value="line">Line Chart</option>
-        </select>
-      </div>
-      <canvas id="monthlyRevenue"></canvas>
-      <div class="export">
-        <button class="btn small" onclick="showExportModal('chart', 'Monthly Revenue Chart', 'monthlyRevenue')">Export Chart</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Yearly revenue</h3>
-      <div class="chart-controls" style="margin-bottom: 10px; text-align: center;">
-        <label for="yearlyRevenueType">Chart Type: </label>
-        <select id="yearlyRevenueType" onchange="changeChartType('yearlyRevenue', this.value)">
-          <option value="bar">Bar Chart</option>
-          <option value="line">Line Chart</option>
-        </select>
-      </div>
-      <canvas id="yearlyRevenue"></canvas>
-      <div class="export">
-        <button class="btn small" onclick="showExportModal('chart', 'Yearly Revenue Chart', 'yearlyRevenue')">Export Chart</button>
-      </div>
+    <div class="export-buttons">
+      <a href="?export=revenue_csv" class="btn">📥 CSV Export</a>
+      <a href="?export=revenue_xlsx" class="btn">📥 Excel Export</a>
     </div>
   </section>
+
 </main>
 
 <!-- 🔹 Integrated Footer -->
@@ -206,156 +353,487 @@ foreach ($approvedApps as $app) {
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
 
-<!-- Export Modal -->
-<div id="exportModal" class="modal" style="display: none;">
-  <div class="modal-content" style="max-width: 400px;">
-    <span onclick="closeExportModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
-    <h3 id="exportModalTitle">Export Options</h3>
-    <div id="exportOptions">
-      <!-- Options will be populated by JavaScript -->
-    </div>
-  </div>
-</div>
+<style>
+  .export-full-page {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #0B3C5D 0%, #083051 100%);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
 
-<!-- Hidden forms for export -->
-<form id="csvExportForm" action="/rentflow/api/export_csv.php" method="post" style="display: none;">
-  <input type="hidden" name="payload" id="csvPayload">
-  <input type="hidden" name="headers" id="csvHeaders">
-  <input type="hidden" name="filename" id="csvFilename">
-</form>
+  .export-full-page h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
 
-<form id="excelExportForm" action="/rentflow/api/export_excel.php" method="post" style="display: none;">
-  <input type="hidden" name="payload" id="excelPayload">
-  <input type="hidden" name="headers" id="excelHeaders">
-  <input type="hidden" name="filename" id="excelFilename">
-</form>
+  .export-full-page .btn {
+    margin-right: 10px;
+    margin-bottom: 10px;
+    background-color: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .export-full-page .btn:hover {
+    background-color: rgba(255,255,255,0.3);
+  }
+
+  .report-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .revenue-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+  }
+
+  .stat-card {
+    padding: 20px;
+    background: linear-gradient(135deg, #0B3C5D 0%, #083051 100%);
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .stat-value {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .export-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .export-buttons .btn {
+    margin: 0;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .chart-header h2 {
+    margin: 0 0 10px 0;
+  }
+
+  .chart-header > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .chart-header .btn {
+    margin: 0 5px 0 0;
+  }
+
+  .chart-type-toggle {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .chart-type-btn {
+    padding: 6px 12px;
+    border: 1px solid #0B3C5D;
+    background: white;
+    color: #0B3C5D;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .chart-type-btn:hover {
+    background: #f0f0f0;
+  }
+
+  .chart-type-btn.active {
+    background: #0B3C5D;
+    color: white;
+  }
+
+  .stall-chart-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+  }
+
+  .stall-breakdown-table {
+    margin-top: 30px;
+  }
+
+  .stall-breakdown-table h3 {
+    margin-bottom: 15px;
+    color: #0B3C5D;
+  }
+
+  .report-section canvas {
+    max-height: 400px;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 20px;
+    background: #f5f5f5;
+    margin-top: 40px;
+    border-top: 1px solid #ddd;
+    font-size: 14px;
+    color: #666;
+  }
+
+  /* Responsive adjustments for reports */
+  @media (max-width: 768px) {
+    .revenue-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .chart-header .btn {
+      width: 100%;
+    }
+
+    .stall-chart-container {
+      max-width: 100%;
+    }
+
+    .table {
+      font-size: 12px;
+    }
+
+    .table th,
+    .table td {
+      padding: 8px 10px;
+    }
+
+    .chart-type-toggle {
+      width: 100%;
+    }
+
+    .chart-type-btn {
+      flex: 1;
+    }
+  }
+</style>
 
 <script>
-// Export modal functionality
-let currentExportData = null;
+  // Store chart instances
+  let charts = {
+    stallAvailabilityChart: null,
+    monthlyRevenueChart: null,
+    yearlyRevenueChart: null
+  };
 
-function showExportModal(type, title, chartId = null) {
-  document.getElementById('exportModalTitle').textContent = `Export ${title}`;
-  const optionsContainer = document.getElementById('exportOptions');
-  
-  // Set up export data based on type
-  switch(type) {
-    case 'revenue':
-      currentExportData = {
-        payload: <?= json_encode($summary) ?>,
-        headers: ['Date','Total Revenue','Total Collected','Total Balances'],
-        filename: 'rentflow_report'
-      };
-      break;
-    case 'approved_apps':
-      currentExportData = {
-        payload: <?= json_encode($approvedExportData) ?>,
-        headers: ['Application ID','Tenant Name','Tenant ID','Email','Business Name','Stall Type','Application Date','Status'],
-        filename: 'approved_applications'
-      };
-      break;
-    case 'chart':
-      // For charts, we'll handle PNG/PDF export differently
-      optionsContainer.innerHTML = `
-        <button class="btn" onclick="exportPNG('${chartId}')">Export as PNG</button>
-        <br><br>
-        <button class="btn" onclick="exportPDF('${chartId}')">Export as PDF</button>
-      `;
-      document.getElementById('exportModal').style.display = 'block';
-      return;
+  // Chart data
+  const stallChartData = {
+    labels: <?= json_encode($stall_labels) ?>,
+    values: <?= json_encode($stall_values) ?>,
+    colors: [
+      'rgba(31, 122, 31, 0.8)',
+      'rgba(242, 183, 5, 0.8)',
+      'rgba(139, 30, 30, 0.8)',
+      'rgba(11, 60, 93, 0.8)',
+      'rgba(31, 122, 31, 0.6)',
+      'rgba(242, 183, 5, 0.6)',
+      'rgba(255, 107, 107, 0.8)',
+      'rgba(78, 205, 196, 0.8)',
+      'rgba(69, 183, 209, 0.8)'
+    ],
+    borderColors: [
+      'rgb(31, 122, 31)',
+      'rgb(242, 183, 5)',
+      'rgb(139, 30, 30)',
+      'rgb(11, 60, 93)',
+      'rgb(31, 122, 31)',
+      'rgb(242, 183, 5)',
+      'rgb(255, 107, 107)',
+      'rgb(78, 205, 196)',
+      'rgb(69, 183, 209)'
+    ]
+  };
+
+  // Initialize Stall Chart
+  function initStallChart(type = 'doughnut') {
+    const ctx = document.getElementById('stallAvailabilityChart').getContext('2d');
+    
+    if (charts.stallAvailabilityChart) {
+      charts.stallAvailabilityChart.destroy();
+    }
+
+    charts.stallAvailabilityChart = new Chart(ctx, {
+      type: type,
+      data: {
+        labels: stallChartData.labels,
+        datasets: [{
+          data: stallChartData.values,
+          backgroundColor: stallChartData.colors,
+          borderColor: stallChartData.borderColors,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: type === 'doughnut' ? 'right' : 'top',
+            labels: {
+              padding: 15,
+              font: { size: 12 }
+            }
+          }
+        },
+        scales: type === 'doughnut' ? {} : {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
   }
-  
-  // For data exports (CSV/Excel)
-  optionsContainer.innerHTML = `
-    <button class="btn" onclick="exportAs('csv')">Export as CSV</button>
-    <br><br>
-    <button class="btn" onclick="exportAs('excel')">Export as Excel</button>
-  `;
-  
-  document.getElementById('exportModal').style.display = 'block';
-}
 
-function closeExportModal() {
-  document.getElementById('exportModal').style.display = 'none';
-}
+  // Switch chart type
+  function switchChartType(chartId, newType, buttonElement) {
+    // Update active button
+    document.querySelectorAll('.chart-type-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    buttonElement.classList.add('active');
 
-function exportAs(format) {
-  if (!currentExportData) return;
-  
-  const form = document.getElementById(format === 'csv' ? 'csvExportForm' : 'excelExportForm');
-  document.getElementById(format === 'csv' ? 'csvPayload' : 'excelPayload').value = JSON.stringify(currentExportData.payload);
-  document.getElementById(format === 'csv' ? 'csvHeaders' : 'excelHeaders').value = JSON.stringify(currentExportData.headers);
-  document.getElementById(format === 'csv' ? 'csvFilename' : 'excelFilename').value = `${currentExportData.filename}.${format === 'csv' ? 'csv' : 'xlsx'}`;
-  
-  form.submit();
-  closeExportModal();
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-  const modal = document.getElementById('exportModal');
-  if (event.target == modal) {
-    closeExportModal();
+    // Reinitialize chart
+    if (chartId === 'stallAvailabilityChart') {
+      initStallChart(newType);
+    }
   }
-}
 
-// Global chart data storage
-let chartData = {};
+  // Monthly Revenue Chart
+  const monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+  charts.monthlyRevenueChart = new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+      labels: <?= json_encode($monthly_labels) ?>,
+      datasets: [{
+        label: 'Monthly Revenue (₱)',
+        data: <?= json_encode($monthly_values) ?>,
+        backgroundColor: 'rgba(11, 60, 93, 0.7)',
+        borderColor: 'rgba(11, 60, 93, 1)',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₱' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
 
-// Build pie data from PHP
-const availData = <?= json_encode($avail) ?>;
-const pieLabels = availData.map(r => r.type);
-const occupied = availData.map(r => Number(r.occupied));
-const available = availData.map(r => Number(r.available));
-const maintenance = availData.map(r => Number(r.maintenance));
+  // Yearly Revenue Chart
+  const yearlyCtx = document.getElementById('yearlyRevenueChart').getContext('2d');
+  charts.yearlyRevenueChart = new Chart(yearlyCtx, {
+    type: 'bar',
+    data: {
+      labels: <?= json_encode($yearly_labels) ?>,
+      datasets: [{
+        label: 'Yearly Revenue (₱)',
+        data: <?= json_encode($yearly_values) ?>,
+        backgroundColor: 'rgba(31, 122, 31, 0.7)',
+        borderColor: 'rgba(31, 122, 31, 1)',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₱' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
 
-// Store chart data
-chartData.pieAvail = {
-  type: 'pie',
-  labels: pieLabels,
-  series: [
-    {label:'Occupied', data: occupied, color:'#8B1E1E'},
-    {label:'Available', data: available, color:'#1F7A1F'},
-    {label:'Maintenance', data: maintenance, color:'#F2B705'}
-  ]
-};
+  // Initialize stall chart
+  initStallChart('doughnut');
 
-chartData.monthlyRevenue = {
-  type: 'bar',
-  labels: <?= json_encode(array_column($monthly,'ym')) ?>,
-  data: <?= json_encode(array_map('floatval', array_column($monthly,'total'))) ?>,
-  label: 'Monthly Revenue'
-};
-
-chartData.yearlyRevenue = {
-  type: 'bar',
-  labels: <?= json_encode(array_column($yearly,'y')) ?>,
-  data: <?= json_encode(array_map('floatval', array_column($yearly,'total'))) ?>,
-  label: 'Yearly Revenue'
-};
-
-// Function to change chart type
-function changeChartType(canvasId, newType) {
-  const data = chartData[canvasId];
-  if (!data) return;
-  
-  // Update stored type
-  data.type = newType;
-  
-  // Re-render chart
-  if (canvasId === 'pieAvail') {
-    renderChart(canvasId, newType, data.labels, null, null, data.series);
-  } else {
-    renderChart(canvasId, newType, data.labels, data.data, data.label);
+  // Export chart as PNG
+  function exportChartAsPNG(canvasId, filename) {
+    const canvas = document.getElementById(canvasId).parentElement;
+    html2canvas(canvas, { scale: 2 }).then(newCanvas => {
+      const link = document.createElement('a');
+      link.href = newCanvas.toDataURL();
+      link.download = filename + '_' + new Date().toISOString().split('T')[0] + '.png';
+      link.click();
+    });
   }
-}
 
-// Initial chart rendering
-renderChart('pieAvail', 'pie', chartData.pieAvail.labels, null, null, chartData.pieAvail.series);
-renderChart('monthlyRevenue', 'bar', chartData.monthlyRevenue.labels, chartData.monthlyRevenue.data, chartData.monthlyRevenue.label);
-renderChart('yearlyRevenue', 'bar', chartData.yearlyRevenue.labels, chartData.yearlyRevenue.data, chartData.yearlyRevenue.label);
+  // Export chart as PDF
+  function exportChartAsPDF(canvasId, filename) {
+    const canvas = document.getElementById(canvasId).parentElement;
+    html2canvas(canvas, { scale: 2 }).then(newCanvas => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgData = newCanvas.toDataURL('image/png');
+      const imgWidth = 280;
+      const imgHeight = (newCanvas.height * imgWidth) / newCanvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      pdf.save(filename + '_' + new Date().toISOString().split('T')[0] + '.pdf');
+    });
+  }
+
+  // Export full page as PDF
+  function exportPageAsPDF() {
+    const element = document.querySelector('main.content');
+    const opt = {
+      margin: 10,
+      filename: 'rentflow_report_' + new Date().toISOString().split('T')[0] + '.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+
+  // Export full page as Word (DOCX)
+  function exportPageAsWord() {
+    const element = document.querySelector('main.content');
+    const html = element.innerHTML;
+    
+    const htmlString = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>RentFlow Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          h1 { color: #0B3C5D; }
+          h2 { color: #0B3C5D; margin-top: 20px; }
+          table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #E6F2F8; color: #0B3C5D; }
+          .stat-card { background-color: #E6F2F8; padding: 10px; margin: 5px 0; border-radius: 4px; }
+          .badge { padding: 4px 8px; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <h1>RentFlow Reports & Analytics</h1>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+        ${html}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlString], { type: 'application/msword' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'rentflow_report_' + new Date().toISOString().split('T')[0] + '.doc';
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  // Export to Google Docs
+  function exportPageAsGoogleDocs() {
+    const title = 'RentFlow Report - ' + new Date().toLocaleDateString();
+    const content = document.querySelector('main.content').innerText;
+    
+    // Create a simple HTML table from content
+    const htmlContent = document.querySelector('main.content').innerHTML;
+    const htmlData = `
+      <html><head><title>${title}</title></head><body>
+      <h1>${title}</h1>
+      ${htmlContent}
+      </body></html>
+    `;
+
+    // Encode for Google Docs
+    const encodedHtml = encodeURIComponent(htmlData);
+    const googleDocsUrl = `https://docs.google.com/document/create?title=${encodeURIComponent(title)}&body=${encodedHtml}`;
+    
+    // Alternative: Use a simple approach with data URI
+    const dataUri = 'data:text/html;charset=utf-8,' + encodedHtml;
+    const blob = new Blob([htmlData], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Open in new tab for user to save
+    const win = window.open(url, '_blank');
+    
+    // Try to trigger Google Docs import (requires Google account)
+    setTimeout(() => {
+      alert('To import this into Google Docs:\n1. Copy the content from the new window\n2. Go to Google Docs\n3. Create a new document and paste');
+    }, 500);
+  }
 </script>
-<script src="/rentflow/public/assets/js/table.js"></script>
-<script src="/rentflow/public/assets/js/charts.js"></script>
+
 </body>
 </html>

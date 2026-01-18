@@ -1,0 +1,17 @@
+{
+    "name": "rentflow/rentflow",
+    "description": "RentFlow - Property Management System",
+    "license": "proprietary",
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^7.0"
+    },
+    "require-dev": {},
+    "autoload": {
+        "files": [
+            "config/db.php",
+            "config/auth.php",
+            "config/constants.php"
+        ]
+    }
+}

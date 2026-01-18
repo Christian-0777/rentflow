@@ -149,7 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Tenant Login - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/login.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">>
 </head>
 <body class="public">
 

@@ -6,7 +6,88 @@ This document tracks all minor and major changes made to the RentFlow project.
 
 ## **MAJOR CHANGES**
 
-### 1. **Two-Factor Authentication (2FA) & Trusted Device System** (Latest)
+### 1. **Stalls Management & Display Enhancement** (Latest)
+- **Version**: 1.3.0
+- **Status**: Implemented & Tested
+- **Description**: Complete redesign of stalls interface for admin and tenant with improved picture handling and table views
+
+#### Files Modified:
+- `admin/stalls.php` - Enhanced admin stalls management interface
+- `tenant/stalls.php` - Redesigned tenant stalls browsing interface
+
+#### Admin Stalls Features:
+1. **Picture Management**:
+   - Thumbnail display at 120×120px in table
+   - Click thumbnail to view original size in modal
+   - Crop/scale independent of original size using `object-fit: cover`
+
+2. **Stall Removal**:
+   - Fixed stall_no parameter handling (was casting string to int)
+   - Automatic picture file deletion when stall is removed
+   - Prevents orphaned files on server
+
+3. **Stall Editing**:
+   - Added file upload field for picture replacement
+   - Auto-deletes old picture when new one uploaded
+   - Shows current picture thumbnail in edit form
+   - Form includes `enctype="multipart/form-data"`
+
+4. **Form Handling**:
+   - Implemented POST-Redirect-GET (PRG) pattern
+   - Prevents "Confirm Form Resubmission" browser warning
+   - Redirects after all actions (add, remove, edit, assign)
+
+#### Tenant Stalls Features:
+1. **Available Stalls Table**:
+   - Converted from grid/card layout to table format
+   - Columns: Stall No, Type, Location, Picture, Action
+   - Clickable picture thumbnails (80×80px) to view full size
+   - "Apply" button in action column
+
+2. **Rented Stalls Table** (New Section):
+   - Displays stalls tenant currently rents
+   - Columns: Stall No, Type, Location, Monthly Rent, Lease Start, Picture
+   - Shows PHP formatted currency (₱ sign)
+   - Shows formatted lease start date
+   - Only displays if tenant has rented stalls
+
+3. **Table Organization**:
+   - Rented stalls section appears FIRST (top of page)
+   - Available stalls section appears SECOND (below rented)
+   - Better user experience - see existing rentals before browsing
+
+4. **Image Viewer Modal**:
+   - Click any stall picture to view at original size
+   - Modal displays image at full resolution
+   - Responsive layout up to 80vh height
+   - Close button (X) or click outside modal to close
+
+#### Database Queries:
+- **Available Stalls**: `SELECT FROM stalls WHERE status='available'`
+- **Rented Stalls**: `SELECT FROM leases JOIN stalls WHERE tenant_id=?`
+
+#### User Experience Improvements:
+- Professional table layout for better data readability
+- Picture modals for full-size viewing
+- Clear section separation (Rented vs Available)
+- Better mobile responsiveness with table format
+- Confirmation dialogs for destructive actions (remove)
+
+#### Security Features:
+- All file paths sanitized with `htmlspecialchars()`
+- File deletion validates existence before unlinking
+- Proper file path construction using `__DIR__`
+- XSS protection on all user-displayed data
+
+#### Browser Compatibility:
+- `object-fit: cover` for thumbnail cropping
+- CSS Grid for responsive tables
+- ES6 JavaScript for modal handling
+- Tested on Chrome, Firefox, Edge
+
+---
+
+### 2. **Two-Factor Authentication (2FA) & Trusted Device System**
 - **Version**: 1.2.0
 - **Status**: Implemented & Tested
 - **Description**: Complete 2FA and device trust management system for enhanced security
@@ -168,6 +249,7 @@ $reset_link = "https://yourdomain.com/public/reset_password.php?token=" . urlenc
 
 | Version | Date       | Major Changes | Status |
 |---------|------------|---------------|--------|
+| 1.3.0   | 2026-01-18 | Stalls Management & Display Enhancement | Implemented |
 | 1.2.0   | 2026-01-15 | 2FA & Trusted Device System | Implemented |
 | 1.1.0   | 2026-01-15 | Password Reset Feature | Implemented |
 | 1.0.0   | TBD        | Initial Release | Pending |

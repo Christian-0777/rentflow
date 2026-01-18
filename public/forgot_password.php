@@ -132,6 +132,8 @@ function send_otp_email($first_name, $otp) {
   <title>Forgot Password - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/login.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     .success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 4px; margin-bottom: 20px; }

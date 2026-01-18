@@ -108,6 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
   <title>Terms & Policies - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/signup.css">
   <style>
     .policies-container {
       max-width: 800px;

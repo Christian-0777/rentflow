@@ -217,6 +217,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <title>Tenant Registration - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/signup.css">
 </head>
 <body class="public">
 

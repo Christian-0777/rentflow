@@ -4,7 +4,7 @@
 
 require_once __DIR__.'/../config/db.php';
 
-$stmt = $pdo->query("SELECT stall_no, type, location FROM stalls WHERE status='available' LIMIT 6");
+$stmt = $pdo->query("SELECT stall_no, type, location, picture_path FROM stalls WHERE status='available' LIMIT 6");
 $available = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -39,21 +39,64 @@ $available = $stmt->fetchAll();
 
   <section class="cards">
     <h2>Available stalls</h2>
-    <div class="grid">
-      <?php foreach ($available as $row): ?>
-        <div class="card">
-          <h3><?= htmlspecialchars($row['stall_no']) ?> (<?= htmlspecialchars($row['type']) ?>)</h3>
-          <p><?= htmlspecialchars($row['location']) ?></p>
-          <a class="btn small" href="/tenant/stalls.php">Apply</a>
-        </div>
-      <?php endforeach; ?>
-    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Stall No</th>
+          <th>Type</th>
+          <th>Location</th>
+          <th>Picture</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($available as $row): ?>
+          <tr>
+            <td><?= htmlspecialchars($row['stall_no']) ?></td>
+            <td><?= htmlspecialchars($row['type']) ?></td>
+            <td><?= htmlspecialchars($row['location']) ?></td>
+            <td>
+              <?php if ($row['picture_path']): ?>
+                <img src="<?= htmlspecialchars($row['picture_path']) ?>" alt="Stall Picture" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" onclick="openImageModal('<?= htmlspecialchars($row['picture_path']) ?>', '<?= htmlspecialchars($row['stall_no']) ?>')">
+              <?php else: ?>
+                No Picture
+              <?php endif; ?>
+            </td>
+            <td>
+              <a class="btn small" href="register.php">Apply</a>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
   </section>
 </main>
 
 <footer class="footer">
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
+
+<script>
+function openImageModal(imagePath, stallNo) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'block';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 90%; width: auto; text-align: center;">
+      <span onclick="this.parentElement.parentElement.remove()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+      <h3>Stall ${stallNo}</h3>
+      <img src="${imagePath}" alt="Stall Picture" style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  modal.onclick = function(event) {
+    if (event.target == modal) {
+      modal.remove();
+    }
+  }
+}
+</script>
 
 </body>
 </html>
