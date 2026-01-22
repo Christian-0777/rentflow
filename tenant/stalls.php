@@ -139,40 +139,43 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
 <!-- Apply Modal -->
 <div id="applyModal" class="modal" style="display: none;">
   <div class="modal-content">
-    <span onclick="closeModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
-    <h2>Apply for Stall</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Apply for Stall</h2>
+      <span onclick="closeModal()" style="font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    </div>
+    
     <form id="applyForm" action="/rentflow/public/api/stalls_apply.php" method="post" enctype="multipart/form-data">
       <input type="hidden" id="modalStallNo" name="stall_no" value="">
       <input type="hidden" id="modalType" name="type" value="">
 
-      <label>
-        Business Name
-        <input type="text" name="business_name" required>
-      </label>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Business Name *</label>
+        <input type="text" name="business_name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+      </div>
 
-      <label>
-        Business Description
-        <textarea name="business_description" rows="3" placeholder="Describe your business..." required></textarea>
-      </label>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Business Description *</label>
+        <textarea name="business_description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Describe your business..." required></textarea>
+      </div>
 
-      <label>
-        Business Permit
-        <input type="file" name="permit" accept=".txt,.doc,.pdf" required>
-      </label>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Business Permit *</label>
+        <input type="file" name="permit" accept=".txt,.doc,.pdf" style="display: block;" required>
+      </div>
 
-      <label>
-        Valid ID
-        <input type="file" name="valid_id" accept=".png,.jpeg,.webp" required>
-      </label>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Valid ID *</label>
+        <input type="file" name="valid_id" accept=".png,.jpeg,.webp" style="display: block;" required>
+      </div>
 
-      <label>
-        Signature
-        <input type="file" name="signature" accept=".pdf,.doc" required>
-      </label>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Signature *</label>
+        <input type="file" name="signature" accept=".pdf,.doc" style="display: block;" required>
+      </div>
 
-      <div style="margin-top:8px;">
-        <button class="btn" type="submit">Submit Application</button>
-        <button class="btn" type="button" onclick="closeModal()">Cancel</button>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" type="button" onclick="closeModal()" style="background-color: #f0f0f0; color: #333;">Cancel</button>
+        <button class="btn" type="submit" style="background-color: #007bff; color: white;">Submit</button>
       </div>
     </form>
   </div>

@@ -8,7 +8,7 @@ session_start();
 $leaseId = (int)($_POST['lease_id'] ?? 0);
 $amount = (float)($_POST['amount'] ?? 0);
 $method = $_POST['method'] ?? 'cash';
-$txnId  = 'TXN-'.strtoupper(bin2hex(random_bytes(4)));
+$txnId  = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
 if (!$leaseId || $amount<=0) {
   header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/admin/payments.php'));

@@ -95,14 +95,13 @@ $ar = $arrears->fetch();
     <h3>Transaction history</h3>
     <table class="table">
       <thead>
-        <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction ID</th><th>Receipt</th></tr>
+        <tr><th>Date</th><th>Amount</th><th>Transaction ID</th><th>Receipt</th></tr>
       </thead>
       <tbody>
         <?php foreach ($rows as $r): ?>
           <tr>
             <td><?= htmlspecialchars($r['payment_date']) ?></td>
             <td>₱<?= number_format($r['amount'],2) ?></td>
-            <td><?= htmlspecialchars($r['method']) ?></td>
             <td><?= htmlspecialchars($r['transaction_id']) ?></td>
             <td>
               <?php if($r['receipt_path']): ?>
