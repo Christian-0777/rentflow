@@ -225,9 +225,20 @@ function openApplicationModal(message) {
         </div>
         <div style="margin-bottom: 20px;">
           <h4>Documents:</h4>
-          <p><strong>Business Permit:</strong> <a href="${data.business_permit_path}" target="_blank">View</a></p>
-          <p><strong>Valid ID:</strong> <a href="${data.valid_id_path}" target="_blank">View</a></p>
-          <p><strong>Signature:</strong> <a href="${data.signature_path}" target="_blank">View</a></p>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
+            <div style="text-align: center;">
+              <strong style="display: block; margin-bottom: 8px; font-size: 12px;">Business Permit</strong>
+              <img src="${data.business_permit_path}" alt="Business Permit" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="window.open('${data.business_permit_path}', '_blank')">
+            </div>
+            <div style="text-align: center;">
+              <strong style="display: block; margin-bottom: 8px; font-size: 12px;">Valid ID</strong>
+              <img src="${data.valid_id_path}" alt="Valid ID" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="window.open('${data.valid_id_path}', '_blank')">
+            </div>
+            <div style="text-align: center;">
+              <strong style="display: block; margin-bottom: 8px; font-size: 12px;">Signature</strong>
+              <img src="${data.signature_path}" alt="Signature" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="window.open('${data.signature_path}', '_blank')">
+            </div>
+          </div>
         </div>
       `;
       

@@ -75,6 +75,22 @@
   transform: scale(1.05);
 }
 
+/* Hamburger Menu Toggle */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 5px;
+  margin-left: auto;
+}
+
+.menu-toggle:hover {
+  transform: scale(1.1);
+}
+
 /* Dropdown removed - styles cleaned up */
 
 /* Main Content Padding */
@@ -83,6 +99,120 @@ main.content {
 }
 main.layout {
   padding-top: 30px;
+}
+
+/* Mobile Responsive Navigation */
+@media (max-width: 768px) {
+  .header {
+    padding: 10px 15px;
+    flex-wrap: wrap;
+  }
+
+  .site-title {
+    font-size: 24px;
+  }
+
+  .menu-toggle {
+    display: block;
+    order: 3;
+  }
+
+  .navigation {
+    order: 4;
+    flex-basis: 100%;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    margin-top: 10px;
+  }
+
+  .navigation.active {
+    max-height: 500px;
+  }
+
+  .navigation ul {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .navigation li {
+    width: 100%;
+  }
+
+  .navigation li a {
+    display: block;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 4px;
+    width: 100%;
+  }
+
+  .navigation li a:hover,
+  .navigation li a.active {
+    background: rgba(255,255,255,0.3);
+  }
+}
+
+/* Mobile Responsive for Tables */
+@media (max-width: 768px) {
+  .table {
+    font-size: 12px;
+    margin: 15px 0;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 8px;
+  }
+
+  main.content {
+    padding-top: 70px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  main.layout {
+    padding-top: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 12px;
+  }
+
+  .site-title {
+    font-size: 20px;
+  }
+
+  .table {
+    font-size: 11px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 5px;
+  }
+
+  .badge {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  main.content {
+    padding-top: 65px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  main.layout {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
 }
 
 /* Table Design */

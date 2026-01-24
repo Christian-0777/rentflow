@@ -3,7 +3,10 @@
 // Tenant login with 2FA support and trusted devices
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+require_once __DIR__.'/../config/mailer.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $msg = '';
 
@@ -79,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->prepare("UPDATE users SET password_reset_otp=?, password_reset_expires=? WHERE id=?")->execute([$hashed_otp, $otp_expires, $u['id']]);
 
                     // Send OTP email
-                    require_once __DIR__.'/../config/mailer.php';
                     $body = "
                     <html>
                     <head>
@@ -157,13 +159,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
-  <nav class="navigation">
-    <ul>
-      <li><a href="index.php">Home</a></li>
-      <li><a href="register.php">Register</a></li>
-      <li><a href="login.php" class="active">Login</a></li>
-    </ul>
-  </nav>
 </header>
 
 <main class="content">
@@ -180,6 +175,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </p>
     <p>
       <a href="forgot_password.php">Forgot Password?</a>
+    </p>
+    <p>
+      Don't have an account? <a href="register.php"><strong>Sign Up</strong></a>
     </p>
   </div>
 </main>

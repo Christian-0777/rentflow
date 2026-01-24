@@ -3,7 +3,9 @@
 // Inserts chat message as notification
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $sender = $_SESSION['user']['id'] ?? 0;
 $receiver = (int)($_POST['receiver_id'] ?? 0);
 $msg = trim($_POST['message'] ?? '');

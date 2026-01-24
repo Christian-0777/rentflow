@@ -257,7 +257,7 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
       <?php foreach ($stalls as $s): ?>
       <tr>
         <td><?= htmlspecialchars($s['stall_no']) ?></td>
-        <td><?= htmlspecialchars($s['type']) ?></td>
+        <td><strong><?= strtoupper(htmlspecialchars($s['type'])) ?></strong></td>
         <td><?= htmlspecialchars($s['location']) ?></td>
         <td><?= htmlspecialchars(strtoupper($s['status'])) ?></td>
         <td>
@@ -284,26 +284,46 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
 <!-- Add Stall Modal -->
 <div id="addStallModal" class="modal" style="display: none;">
   <div class="modal-content">
-    <span onclick="closeAddStallModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
-    <h3>Add New Stall</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Add New Stall</h2>
+      <span onclick="closeAddStallModal()" style="font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    </div>
+    
     <form method="post" enctype="multipart/form-data">
       <input type="hidden" name="action" value="add">
-      <label for="type">Type:</label>
-      <select name="type" id="type" required>
-        <option value="wet">Wet</option>
-        <option value="dry">Dry</option>
-        <option value="apparel">Apparel</option>
-      </select><br><br>
-      <label for="location">Location:</label>
-      <input type="text" name="location" id="location" placeholder="Location" required><br><br>
-      <label for="status">Status:</label>
-      <select name="status" id="status">
-        <option value="available">Available</option>
-        <option value="maintenance">Maintenance</option>
-      </select><br><br>
-      <label for="picture">Picture:</label>
-      <input type="file" name="picture" id="picture" accept="image/*"><br><br>
-      <button type="submit" class="btn">Add Stall</button>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Stall Type *</label>
+        <select name="type" id="type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+          <option value="">Select Type</option>
+          <option value="wet">Wet</option>
+          <option value="dry">Dry</option>
+          <option value="apparel">Apparel</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Location *</label>
+        <input type="text" name="location" id="location" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Enter location" required>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Status</label>
+        <select name="status" id="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="available">Available</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Stall Picture</label>
+        <input type="file" name="picture" id="picture" accept="image/*" style="display: block;">
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" type="button" onclick="closeAddStallModal()" style="background-color: #f0f0f0; color: #333;">Cancel</button>
+        <button class="btn" type="submit" style="background-color: #28a745; color: white;">Add Stall</button>
+      </div>
     </form>
   </div>
 </div>

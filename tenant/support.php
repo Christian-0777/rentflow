@@ -44,44 +44,94 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tenant Dashboard - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <title>Customer Support - RentFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css">
 </head>
-<body class="tenant">
+<body>
 
-<header class="header">
-  <h1 class="site-title">RentFlow</h1>
-
-  <nav class="navigation">
-    <ul>
-      <li><a href="dashboard.php" class="active">Dashboard</a></li>
-      <li><a href="payments.php">Payments</a></li>
-      <li><a href="stalls.php">Stalls</a></li>
-      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
-      <li><a href="profile.php" class="nav-profile" title="Account"><i class="material-icons">person</i></a></li>
-      <li><a href="support.php" title="Contact Support"><i  class="material-icons">contact_support</i></a></li>
-      <li><a href="/rentflow/public/logout.php">Logout</a></li>
+<!-- Navigation Bar -->
+<nav class="tenant-navbar">
+  <div class="tenant-navbar-content">
+    <ul class="tenant-navbar-nav">
+      <li><a href="dashboard.php" title="Dashboard"><i class="material-icons">dashboard</i><span>Dashboard</span></a></li>
+      <li><a href="payments.php" title="Payments"><i class="material-icons">payment</i><span>Payments</span></a></li>
+      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span>Stalls</span></a></li>
+      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span>Notifications</span></a></li>
+      <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span>Profile</span></a></li>
+      <li><a href="account.php" title="Settings"><i class="material-icons">settings</i><span>Settings</span></a></li>
     </ul>
-  </nav>
-</header>
+  </div>
+</nav>
 
-<main class="content">
-  <h1>Customer Service</h1>
-  <?php if($msg): ?><div class="alert success"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
-  <form method="post" class="card" enctype="multipart/form-data">
-    <textarea name="message" placeholder="Describe your issue..." rows="6" required></textarea>
-    <input type="file" name="attachment" accept="image/*" placeholder="Upload screenshot or image">
-    <button class="btn">Send</button>
-  </form>
+<main class="tenant-content">
+  <div class="page-header">
+    <h1>Customer Support</h1>
+    <p>Send a message to our support team and we'll help you shortly</p>
+  </div>
+
+  <?php if($msg): ?>
+    <div class="alert alert-success">
+      <i class="material-icons">check_circle</i>
+      <div><?= htmlspecialchars($msg) ?></div>
+      <button class="btn-close" onclick="this.parentElement.style.display='none'"></button>
+    </div>
+  <?php endif; ?>
+
+  <div class="tenant-card" style="max-width: 600px; margin-bottom: 24px;">
+    <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">mail</i>Send Message</h3>
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Your Message</label>
+        <textarea name="message" placeholder="Describe your issue, question, or concern..." rows="6" required></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Attach File (Optional)</label>
+        <small style="display: block; margin-bottom: 8px; color: var(--secondary);">Attach screenshot or image (max 5MB)</small>
+        <input type="file" name="attachment" accept="image/*">
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <a href="dashboard.php" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="material-icons" style="font-size: 18px;">send</i> Send Message
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="tenant-grid">
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">schedule</i>Response Time</h3>
+      <p>We typically respond to support requests within 24 hours during business days.</p>
+    </div>
+
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">help</i>Common Issues</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+        <li>Payment problems or inquiries</li>
+        <li>Stall lease and application issues</li>
+        <li>Account and profile updates</li>
+        <li>Technical support</li>
+      </ul>
+    </div>
+
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">info</i>Support Hours</h3>
+      <p>Our support team is available:</p>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+        <li>Monday - Friday: 9:00 AM - 6:00 PM</li>
+        <li>Saturday: 10:00 AM - 3:00 PM</li>
+        <li>Sunday: Closed</li>
+      </ul>
+    </div>
+  </div>
 </main>
 
-<!-- 🔹 Integrated Footer -->
-<footer class="footer">
-  <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
-</footer>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
  

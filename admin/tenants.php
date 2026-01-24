@@ -24,7 +24,7 @@ $orderSql = [
 ][$order] ?? 's.stall_no ASC';
 
 $sql = "
-SELECT u.id, s.stall_no, CONCAT(u.first_name, ' ', u.last_name) AS full_name, u.tenant_id, u.business_name, u.status,
+SELECT u.id, s.stall_no, s.type AS stall_category, CONCAT(u.first_name, ' ', u.last_name) AS full_name, u.tenant_id, u.business_name, u.status,
        l.id AS lease_id,
        COALESCE((SELECT SUM(amount) FROM payments WHERE lease_id=l.id),0) AS total_paid,
        COALESCE(a.total_arrears,0) AS total_arrears
@@ -55,6 +55,7 @@ $exportData = [];
 foreach ($rows as $r) {
   $exportData[] = [
     'stall_no' => $r['stall_no'],
+    'category' => $r['stall_category'],
     'tenant' => $r['full_name'] . ' (' . $r['tenant_id'] . ')',
     'business' => $r['business_name'],
     'status' => $r['status'],
@@ -119,7 +120,7 @@ foreach ($rows as $r) {
   <section class="actions">
     <form action="/rentflow/api/export_csv.php" method="post">
       <input type="hidden" name="payload" value="<?= htmlspecialchars(json_encode($exportData)) ?>">
-      <input type="hidden" name="headers" value="<?= htmlspecialchars(json_encode(['Stall No.','Tenant','Business','Status','Total Paid','Total Arrears'])) ?>">
+      <input type="hidden" name="headers" value="<?= htmlspecialchars(json_encode(['Stall No.','Category','Tenant','Business','Status','Total Paid','Total Arrears'])) ?>">
       <input type="hidden" name="filename" value="tenants_list.csv">
       <button class="btn">Export CSV</button>
     </form>
@@ -128,13 +129,14 @@ foreach ($rows as $r) {
   <table class="table">
     <thead>
       <tr>
-        <th>Stall No.</th><th>Tenant</th><th>Business</th><th>Status</th><th>Total Paid</th><th>Total Arrears</th><th>Previous Payments</th><th>Actions</th>
+        <th>Stall No.</th><th>Category</th><th>Tenant</th><th>Business</th><th>Status</th><th>Total Paid</th><th>Total Arrears</th><th>Previous Payments</th><th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <?php foreach ($rows as $r): ?>
         <tr>
           <td><?= htmlspecialchars($r['stall_no']) ?></td>
+          <td><strong><?= strtoupper(htmlspecialchars($r['stall_category'])) ?></strong></td>
           <td><a href="tenant_profile.php?id=<?= $r['id'] ?>"><?= htmlspecialchars($r['full_name']) ?> (<?= htmlspecialchars($r['tenant_id']) ?>)</a></td>
           <td><?= htmlspecialchars($r['business_name']) ?></td>
           <td><span class="badge"><?= htmlspecialchars(strtoupper($r['status'])) ?></span></td>

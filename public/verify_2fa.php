@@ -3,7 +3,9 @@
 // 2FA OTP verification with trusted device option
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if 2FA is required
 if (!isset($_SESSION['2fa_required']) || !$_SESSION['2fa_required']) {
@@ -152,13 +154,6 @@ $user_first_name = $_SESSION['pending_login']['first_name'] ?? 'User';
 
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
-  <nav class="navigation">
-    <ul>
-      <li><a href="index.php">Home</a></li>
-      <li><a href="register.php">Register</a></li>
-      <li><a href="login.php">Login</a></li>
-    </ul>
-  </nav>
 </header>
 
 <main class="content" style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 200px); padding-top: 80px;">

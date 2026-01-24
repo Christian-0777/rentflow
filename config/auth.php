@@ -2,7 +2,9 @@
 // config/auth.php
 // Session start, role checks, admin/treasury 3-code login
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 function require_role($role) {
   if (!isset($_SESSION['user'])) {

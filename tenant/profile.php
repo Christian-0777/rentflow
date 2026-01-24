@@ -22,58 +22,87 @@ $user = $info->fetch();
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tenant Dashboard - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <title>Profile - RentFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css">
 </head>
-<body class="tenant">
+<body>
 
-<header class="header">
-  <h1 class="site-title">RentFlow</h1>
-
-  <nav class="navigation">
-    <ul>
-      <li><a href="dashboard.php" class="active">Dashboard</a></li>
-      <li><a href="payments.php">Payments</a></li>
-      <li><a href="stalls.php">Stalls</a></li>
-      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
-      <li><a href="profile.php" class="nav-profile" title="Account"><i class="material-icons">person</i></a></li>
-      <li><a href="support.php" title="Contact Support"><i class="material-icons">contact_support</i></a></li>
-      <li><a href="/rentflow/public/logout.php">Logout</a></li>
+<!-- Navigation Bar -->
+<nav class="tenant-navbar">
+  <div class="tenant-navbar-content">
+    <ul class="tenant-navbar-nav">
+      <li><a href="dashboard.php" title="Dashboard"><i class="material-icons">dashboard</i><span>Dashboard</span></a></li>
+      <li><a href="payments.php" title="Payments"><i class="material-icons">payment</i><span>Payments</span></a></li>
+      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span>Stalls</span></a></li>
+      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span>Notifications</span></a></li>
+      <li><a href="profile.php" class="active" title="Profile"><i class="material-icons">person</i><span>Profile</span></a></li>
+      <li><a href="account.php" title="Settings"><i class="material-icons">settings</i><span>Settings</span></a></li>
     </ul>
-  </nav>
-</header>
+  </div>
+</nav>
 
-<main class="content">
-  <div class="profile-cover" style="background-image:url('<?= htmlspecialchars($user['cover_photo'] ?? '/public/assets/img/placeholders/cover.jpg') ?>')">
+<main class="tenant-content">
+  <div class="profile-header">
+    <div class="profile-cover" style="background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
     <div class="profile-info">
-      <img class="avatar" src="<?= htmlspecialchars($user['profile_photo'] ?? '/public/assets/img/placeholders/avatar.png') ?>">
-      <div>
+      <div style="width: 160px; height: 160px; border-radius: 50%; background: var(--light); border: 4px solid var(--white); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
+        <i class="material-icons" style="font-size: 80px; color: var(--primary);">account_circle</i>
+      </div>
+      <div class="profile-info-text">
         <h1><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></h1>
         <p>Status: <span class="badge"><?= htmlspecialchars(strtoupper($user['status'])) ?></span></p>
-        <a class="btn small" href="account.php">Edit profile</a>
+        <a class="btn btn-primary btn-small" href="account.php">
+          <i class="material-icons" style="font-size: 18px;">edit</i> Edit Profile
+        </a>
       </div>
     </div>
   </div>
 
-  <section class="grid">
-    <div class="card">
-      <h3>Stall</h3>
-      <p><strong>Tenant ID:</strong> <?= htmlspecialchars($user['tenant_id']) ?></p>
-      <p><strong>No.:</strong> <?= htmlspecialchars($user['stall_no'] ?? '—') ?></p>
-      <p><strong>Location:</strong> <?= htmlspecialchars($user['location'] ?? '') ?></p>
-      <p><strong>Business:</strong> <?= htmlspecialchars($user['business_name'] ?? '—') ?></p>
-      <p><strong>Lease:</strong> <?= htmlspecialchars($user['lease_start']) ?> to <?= htmlspecialchars($user['lease_end'] ?? 'present') ?></p>
+  <div class="tenant-grid" style="margin-top: 24px;">
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">apartment</i>Rental Information</h3>
+      <h4>Tenant ID</h4>
+      <p><?= htmlspecialchars($user['tenant_id']) ?></p>
+      
+      <h4>Stall Number</h4>
+      <p><?= htmlspecialchars($user['stall_no'] ?? '—') ?></p>
+      
+      <h4>Location</h4>
+      <p><?= htmlspecialchars($user['location'] ?? 'Not assigned') ?></p>
     </div>
-  </section>
+
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">business</i>Business Details</h3>
+      <h4>Business Name</h4>
+      <p><?= htmlspecialchars($user['business_name'] ?? '—') ?></p>
+      
+      <h4>Lease Period</h4>
+      <p>
+        <?= htmlspecialchars($user['lease_start']) ?> 
+        <br>to 
+        <br><?= htmlspecialchars($user['lease_end'] ?? 'Present') ?>
+      </p>
+    </div>
+
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">info</i>Account Overview</h3>
+      <h4>Contact Email</h4>
+      <p><?= htmlspecialchars($user['email'] ?? '—') ?></p>
+      
+      <h4>Member Since</h4>
+      <p><?= htmlspecialchars(date('M d, Y', strtotime($user['created_at'] ?? 'now'))) ?></p>
+      
+      <a class="btn btn-secondary btn-small" href="account.php">
+        <i class="material-icons" style="font-size: 18px;">settings</i> Account Settings
+      </a>
+    </div>
+  </div>
 </main>
 
-<footer class="footer">
-  <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
-</footer>
-
-</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
  

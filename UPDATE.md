@@ -210,16 +210,91 @@ This document tracks all minor and major changes made to the RentFlow project.
 
 ## **MINOR CHANGES**
 
-### 1. **Database Schema Migration**
+### 1. **SendGrid API Integration with PHPMailer Fallback** (Latest)
+- **Version**: 1.3.1
+- **Status**: Implemented
+- **Description**: Dual email provider system with SendGrid as primary and PHPMailer as automatic fallback
+
+#### Files Modified:
+- `config/mailer.php` - Updated with SendGrid and PHPMailer dual implementation
+- `public/register.php` - Now uses updated send_mail function
+- `public/login.php` - Removed duplicate mailer include, uses updated send_mail function
+- `public/forgot_password.php` - Now uses updated send_mail function
+- `api/stalls_apply.php` - Now uses updated send_mail function
+- `.env` - Added SENDGRID_API_KEY configuration
+
+#### Key Features:
+- **Primary**: SendGrid API for reliable email delivery
+- **Fallback**: PHPMailer SMTP automatically activated if SendGrid fails or API key not configured
+- **Single Interface**: All existing `send_mail()` calls work without modification
+- **Error Logging**: Both providers log errors for debugging and monitoring
+- **Seamless Failover**: Automatic fallback to SMTP if API request fails
+
+#### Functions Implemented:
+- `send_mail($to, $subject, $body)` - Main function with automatic provider selection
+- `send_mail_sendgrid($to, $subject, $body)` - SendGrid API implementation
+- `send_mail_phpmailer($to, $subject, $body)` - PHPMailer SMTP implementation
+
+#### Configuration:
+- **SendGrid**: Add API key to `.env` file
+  ```
+  SENDGRID_API_KEY=your_sendgrid_api_key_here
+  ```
+- **SMTP Fallback**: Existing Gmail SMTP configuration in `.env` remains active
+  ```
+  MAIL_HOST=smtp.gmail.com
+  MAIL_PORT=587
+  MAIL_USERNAME=your_email@gmail.com
+  MAIL_PASSWORD=your_app_password
+  MAIL_FROM=no-reply@rentflow.local
+  MAIL_FROM_NAME=Rentflow Team
+  ```
+
+#### Email Triggers Using New System:
+- Account registration confirmation (register.php)
+- 2FA OTP verification (register.php, login.php)
+- Password reset requests (forgot_password.php - both initial and resend)
+- Stall application notifications (api/stalls_apply.php)
+
+#### Provider Selection Logic:
+1. Check if SENDGRID_API_KEY is configured in .env
+2. If yes, attempt SendGrid API call
+3. If SendGrid succeeds, email is sent ✓
+4. If SendGrid fails or API key missing, fallback to PHPMailer SMTP
+5. Log errors from both providers for monitoring
+
+#### Benefits:
+- **High Reliability**: Dual provider ensures email delivery
+- **Cost Efficiency**: Use SendGrid's scalable API while maintaining SMTP backup
+- **No Code Changes**: All existing email functions continue to work
+- **Better Logging**: Track which provider is handling emails
+- **Enterprise Ready**: Automatic failover suitable for production environments
+
+#### Testing:
+- All authentication emails tested with SendGrid
+- Fallback to PHPMailer verified for API failures
+- OTP delivery confirmed working
+- Admin notifications confirmed working
+
+#### Deployment Instructions:
+1. Update `.env` with SendGrid API key (obtain from sendgrid.com)
+2. Keep existing SMTP credentials as fallback
+3. Monitor logs for email delivery
+4. Test registration, login, and password reset flows
+
+---
+
+### 2. **Database Schema Migration**
 - Added password reset columns to users table
 - Created performance index for token lookups
 
-### 2. **UI/UX Improvements**
+### 3. **UI/UX Improvements**
 - Added "Forgot Password?" link to login page for better user experience
 
-### 3. **Email Configuration**
+### 4. **Email Configuration**
 - PHPMailer integration verified and ready
 - SMTP configuration templates provided
+- SendGrid API integrated as primary provider
 
 ---
 
@@ -249,6 +324,7 @@ $reset_link = "https://yourdomain.com/public/reset_password.php?token=" . urlenc
 
 | Version | Date       | Major Changes | Status |
 |---------|------------|---------------|--------|
+| 1.3.1   | 2026-01-22 | SendGrid API Integration with PHPMailer Fallback | Implemented |
 | 1.3.0   | 2026-01-18 | Stalls Management & Display Enhancement | Implemented |
 | 1.2.0   | 2026-01-15 | 2FA & Trusted Device System | Implemented |
 | 1.1.0   | 2026-01-15 | Password Reset Feature | Implemented |
@@ -327,5 +403,5 @@ For issues or feature requests, please contact the development team or open an i
 
 ---
 
-**Last Updated**: January 15, 2026  
+**Last Updated**: January 22, 2026  
 **Project**: RentFlow - Property Rental Management System

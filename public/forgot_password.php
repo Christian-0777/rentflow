@@ -5,7 +5,9 @@
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/mailer.php';
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $msg = '';
 $msg_type = '';
@@ -143,13 +145,6 @@ function send_otp_email($first_name, $otp) {
 
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
-  <nav class="navigation">
-    <ul>
-      <li><a href="index.php">Home</a></li>
-      <li><a href="register.php">Register</a></li>
-      <li><a href="login.php">Login</a></li>
-    </ul>
-  </nav>
 </header>
 
 <main class="content">

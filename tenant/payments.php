@@ -46,82 +46,106 @@ $ar = $arrears->fetch();
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tenant Dashboard - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <title>Payments - RentFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css">
 </head>
-<body class="tenant">
+<body>
 
-<header class="header">
-  <h1 class="site-title">RentFlow</h1>
-
-  <nav class="navigation">
-    <ul>
-      <li><a href="dashboard.php" class="active">Dashboard</a></li>
-      <li><a href="payments.php">Payments</a></li>
-      <li><a href="stalls.php">Stalls</a></li>
-      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
-      <li><a href="profile.php" class="nav-profile" title="Account"><i class="material-icons">person</i></a></li>
-      <li><a href="support.php" title="Contact Support"><i class="material-icons">contact_support</i></a></li>
-      <li><a href="/rentflow/public/logout.php">Logout</a></li>
+<!-- Navigation Bar -->
+<nav class="tenant-navbar">
+  <div class="tenant-navbar-content">
+    <ul class="tenant-navbar-nav">
+      <li><a href="dashboard.php" title="Dashboard"><i class="material-icons">dashboard</i><span>Dashboard</span></a></li>
+      <li><a href="payments.php" class="active" title="Payments"><i class="material-icons">payment</i><span>Payments</span></a></li>
+      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span>Stalls</span></a></li>
+      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span>Notifications</span></a></li>
+      <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span>Profile</span></a></li>
+      <li><a href="account.php" title="Settings"><i class="material-icons">settings</i><span>Settings</span></a></li>
     </ul>
-  </nav>
-</header>
+  </div>
+</nav>
 
-<main class="content">
-  <h1>Payments</h1>
+<main class="tenant-content">
+  <div class="page-header">
+    <h1>Payments</h1>
+    <p>Manage and track your rental payments</p>
+  </div>
 
-  <section class="grid">
-    <div class="card">
-      <h3>Upcoming payment</h3>
-      <p><strong>Amount:</strong> ₱<?= number_format($upcoming['amount_due'] ?? 0,2) ?></p>
-      <p><strong>Due:</strong> <?= htmlspecialchars($upcoming['due_date'] ?? '—') ?></p>
-      <p><strong>Total Arrears:</strong> ₱<?= number_format($ar['total_arrears'] ?? 0,2) ?></p>
-      <p><strong>Previous Arrears:</strong> ₱<?= number_format(($ar['total_arrears'] ?? 0) - ($ar['current_month_penalties'] ?? 0), 2) ?></p>
-      <p><strong>Late penalty:</strong> Applied daily if overdue.</p>
+  <div class="payment-info">
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">calendar_today</i>Upcoming Payment</h3>
+      <div class="stat-value">₱<?= number_format($upcoming['amount_due'] ?? 0,2) ?></div>
+      <h4>Due Date</h4>
+      <p><?= htmlspecialchars($upcoming['due_date'] ?? '—') ?></p>
     </div>
 
-    <div class="card">
-      <h3>Recent paid</h3>
-      <p><strong>Total Arrears:</strong> ₱<?= number_format($ar['total_arrears'] ?? 0,2) ?></p>
-      <p><strong>Previous Arrears:</strong> ₱<?= number_format(($ar['total_arrears'] ?? 0) - ($ar['current_month_penalties'] ?? 0), 2) ?></p>
-      <p><strong>Last payment:</strong> ₱<?= number_format($last['amount'] ?? 0,2) ?> on <?= htmlspecialchars($last['payment_date'] ?? '—') ?></p>
-      <p><strong>Penalty applied:</strong> Included in receipt if late.</p>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">trending_down</i>Total Arrears</h3>
+      <div class="stat-value" style="color: var(--danger);">₱<?= number_format($ar['total_arrears'] ?? 0,2) ?></div>
+      <h4>Current Month Penalties</h4>
+      <p>₱<?= number_format($ar['current_month_penalties'] ?? 0, 2) ?></p>
     </div>
-  </section>
 
-  <section class="table-section">
-    <h3>Transaction history</h3>
-    <table class="table">
-      <thead>
-        <tr><th>Date</th><th>Amount</th><th>Transaction ID</th><th>Receipt</th></tr>
-      </thead>
-      <tbody>
-        <?php foreach ($rows as $r): ?>
-          <tr>
-            <td><?= htmlspecialchars($r['payment_date']) ?></td>
-            <td>₱<?= number_format($r['amount'],2) ?></td>
-            <td><?= htmlspecialchars($r['transaction_id']) ?></td>
-            <td>
-              <?php if($r['receipt_path']): ?>
-                <a class="btn small" href="<?= htmlspecialchars($r['receipt_path']) ?>" target="_blank">View</a>
-              <?php else: ?>
-                —
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </section>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">check_circle</i>Last Payment</h3>
+      <div class="stat-value" style="color: var(--success);">₱<?= number_format($last['amount'] ?? 0,2) ?></div>
+      <h4>Paid On</h4>
+      <p><?= htmlspecialchars($last['payment_date'] ?? '—') ?></p>
+    </div>
+  </div>
+
+  <div class="tenant-card" style="margin-bottom: 24px;">
+    <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">history</i>Transaction History</h3>
+    <?php if (empty($rows)): ?>
+      <p style="color: var(--secondary); margin: 0;">No payment records found.</p>
+    <?php else: ?>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Transaction ID</th>
+              <th>Receipt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($rows as $r): ?>
+              <tr>
+                <td><?= htmlspecialchars($r['payment_date']) ?></td>
+                <td><strong>₱<?= number_format($r['amount'],2) ?></strong></td>
+                <td><code style="font-size: 12px;"><?= htmlspecialchars(substr($r['transaction_id'], 0, 12)) ?>...</code></td>
+                <td>
+                  <?php if($r['receipt_path']): ?>
+                    <a class="btn btn-primary btn-small" href="<?= htmlspecialchars($r['receipt_path']) ?>" target="_blank">
+                      <i class="material-icons" style="font-size: 16px;">picture_as_pdf</i>
+                    </a>
+                  <?php else: ?>
+                    <span style="color: var(--secondary);">—</span>
+                  <?php endif; ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <div class="tenant-card" style="border-left: 4px solid var(--warning);">
+    <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: var(--warning);">info</i>Payment Information</h3>
+    <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+      <li>Late penalty is applied daily if payment is overdue</li>
+      <li>Payment receipts include penalty charges if applicable</li>
+      <li>All amounts are in Philippine Peso (₱)</li>
+      <li>Contact support for payment difficulties</li>
+    </ul>
+  </div>
 </main>
 
-<!-- 🔹 Integrated Footer -->
-<footer class="footer">
-  <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
-</footer>
-
-  
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

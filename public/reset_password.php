@@ -3,7 +3,9 @@
 // OTP-based password reset confirmation page with modal
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $msg = '';
 $msg_type = '';
@@ -243,13 +245,6 @@ $from_forgot_page = isset($_SESSION['otp_request_email']);
 
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
-  <nav class="navigation">
-    <ul>
-      <li><a href="index.php">Home</a></li>
-      <li><a href="register.php">Register</a></li>
-      <li><a href="login.php">Login</a></li>
-    </ul>
-  </nav>
 </header>
 
 <main class="content">

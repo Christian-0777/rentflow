@@ -59,3 +59,44 @@
   margin-bottom: 0;
   cursor: pointer;
 }
+
+/* Mobile Responsive for Signup Pages */
+@media (max-width: 768px) {
+  .register-card {
+    padding: 25px;
+    margin: 15px;
+    margin-top: 80px;
+  }
+
+  .modal-content {
+    width: 90%;
+    max-height: 70vh;
+    padding: 20px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-card {
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 65vh;
+    padding: 15px;
+    border-radius: 6px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+}

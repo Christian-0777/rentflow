@@ -19,12 +19,6 @@ $available = $stmt->fetchAll();
 
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
-  <nav class="navigation">
-    <ul>
-      <li><a href="register.php">Register</a></li>
-      <li><a href="login.php">Login</a></li>
-    </ul>
-  </nav>
 </header>
 
 <main class="layout">

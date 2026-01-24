@@ -3,7 +3,9 @@
 // Fetches chat messages and notifications for polling (latest first)
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 header('Content-Type: application/json');
 
 $userId = $_SESSION['user']['id'] ?? 0;

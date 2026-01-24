@@ -8,13 +8,17 @@ require_once __DIR__.'/../config/auth.php';
 // ✅ Use plain string for role check
 require_role('admin');
 
-// Stall availability with details
+// Stall availability summary by type
 $stalls = $pdo->query("
-  SELECT s.stall_no, s.type, s.status, CONCAT(u.first_name, ' ', u.last_name) AS tenant, u.business_name
+  SELECT 
+    s.type,
+    SUM(CASE WHEN s.status='available' THEN 1 ELSE 0 END) AS available_count,
+    SUM(CASE WHEN s.status='occupied' THEN 1 ELSE 0 END) AS occupied_count,
+    SUM(CASE WHEN s.status='maintenance' THEN 1 ELSE 0 END) AS maintenance_count,
+    COUNT(*) AS total_count
   FROM stalls s
-  LEFT JOIN leases l ON s.id = l.stall_id
-  LEFT JOIN users u ON l.tenant_id = u.id
-  ORDER BY s.type, s.stall_no
+  GROUP BY s.type
+  ORDER BY s.type
 ")->fetchAll();
 
 // Upcoming payments (dues not paid yet)
@@ -96,17 +100,17 @@ $recent = $pdo->query("
     <table class="table">
       <thead>
         <tr>
-          <th>Stall No</th><th>Type</th><th>Status</th><th>Tenant</th><th>Business</th>
+          <th>Category</th><th>Available</th><th>Occupied</th><th>Under Maintenance</th><th>Total</th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($stalls as $s): ?>
           <tr>
-            <td><?= htmlspecialchars($s['stall_no']) ?></td>
             <td><?= ucfirst($s['type']) ?></td>
-            <td><span class="badge"><?= htmlspecialchars(strtoupper($s['status'])) ?></span></td>
-            <td><?= htmlspecialchars($s['tenant'] ?? '—') ?></td>
-            <td><?= htmlspecialchars($s['business_name'] ?? '—') ?></td>
+            <td><?= $s['available_count'] ?></td>
+            <td><?= $s['occupied_count'] ?></td>
+            <td><?= $s['maintenance_count'] ?></td>
+            <td><?= $s['total_count'] ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>

@@ -3,7 +3,9 @@
 // Simple chat interface for tenant ↔ admin communication
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__.'/../partials/header.php';
 
 $userId = $_SESSION['user']['id'] ?? 0;

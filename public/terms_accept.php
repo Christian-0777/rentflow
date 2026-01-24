@@ -3,7 +3,9 @@
 // Display Terms, Privacy & Policies and mark tenant as having accepted them
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (!isset($_SESSION['user']['id'])) {
     // No user in session, redirect to login
@@ -137,12 +139,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
 
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
-  <nav class="navigation">
-    <ul>
-      <li><a href="index.php">Home</a></li>
-      <li><a href="login.php">Login</a></li>
-    </ul>
-  </nav>
 </header>
 
 <main class="content">

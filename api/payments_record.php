@@ -3,7 +3,9 @@
 // Records tenant payments, updates dues and arrears, generates receipt
 
 require_once __DIR__.'/../config/db.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $leaseId = (int)($_POST['lease_id'] ?? 0);
 $amount = (float)($_POST['amount'] ?? 0);

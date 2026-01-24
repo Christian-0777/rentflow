@@ -135,3 +135,90 @@ main.content > .card-container {
   width: 100%;
   max-width: 500px;
 }
+
+/* Mobile Responsive for Auth Pages */
+@media (max-width: 768px) {
+  body.public main.content,
+  body.admin main.content,
+  body.treasury main.content {
+    min-height: auto;
+    padding-top: 70px;
+    padding-bottom: 20px;
+  }
+
+  body.public main.content h1,
+  body.admin main.content h1,
+  body.treasury main.content h1 {
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+
+  body.public main.content h2,
+  body.admin main.content h2,
+  body.treasury main.content h2 {
+    font-size: 18px;
+  }
+
+  main.content > form,
+  main.content > .card-container {
+    padding: 25px;
+    max-width: 100%;
+    margin: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  body.public main.content input,
+  body.admin main.content input,
+  body.treasury main.content input,
+  body.public main.content select,
+  body.admin main.content select,
+  body.treasury main.content select {
+    font-size: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  body.public main.content button,
+  body.admin main.content button,
+  body.treasury main.content button {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  body.public main.content p,
+  body.admin main.content p,
+  body.treasury main.content p {
+    font-size: 13px;
+    margin-top: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  body.public main.content,
+  body.admin main.content,
+  body.treasury main.content {
+    padding-top: 65px;
+  }
+
+  body.public main.content h1,
+  body.admin main.content h1,
+  body.treasury main.content h1 {
+    font-size: 20px;
+  }
+
+  main.content > form,
+  main.content > .card-container {
+    padding: 20px;
+    margin: 10px;
+  }
+
+  body.public main.content input,
+  body.admin main.content input,
+  body.treasury main.content input,
+  body.public main.content select,
+  body.admin main.content select,
+  body.treasury main.content select {
+    font-size: 16px;
+    padding: 12px;
+  }
+}

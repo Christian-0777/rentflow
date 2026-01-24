@@ -59,119 +59,162 @@ $trustedDevices = $devices->fetchAll();
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tenant Dashboard - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <title>Account Settings - RentFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css">
 </head>
-<body class="tenant">
+<body>
 
-<header class="header">
-  <h1 class="site-title">RentFlow</h1>
-
-  <nav class="navigation">
-    <ul>
-      <li><a href="dashboard.php" class="active">Dashboard</a></li>
-      <li><a href="payments.php">Payments</a></li>
-      <li><a href="stalls.php">Stalls</a></li>
-      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
-      <li><a href="profile.php" class="nav-profile" title="Account"><i class="material-icons">person</i></a></li>
-      <li><a href="support.php" title="Contact Support"><i class="material-icons">contact_support</i></a></li>
-      <li><a href="/rentflow/public/logout.php">Logout</a></li>
+<!-- Navigation Bar -->
+<nav class="tenant-navbar">
+  <div class="tenant-navbar-content">
+    <ul class="tenant-navbar-nav">
+      <li><a href="dashboard.php" title="Dashboard"><i class="material-icons">dashboard</i><span>Dashboard</span></a></li>
+      <li><a href="payments.php" title="Payments"><i class="material-icons">payment</i><span>Payments</span></a></li>
+      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span>Stalls</span></a></li>
+      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span>Notifications</span></a></li>
+      <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span>Profile</span></a></li>
+      <li><a href="account.php" class="active" title="Settings"><i class="material-icons">settings</i><span>Settings</span></a></li>
     </ul>
-  </nav>
-</header>
+  </div>
+</nav>
 
-<main class="content">
-  <h1>Account Settings</h1>
-  <?php if ($msg): ?><div class="alert success"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
+<main class="tenant-content">
+  <div class="page-header">
+    <h1>Account Settings</h1>
+    <p>Manage your profile, security, and preferences</p>
+  </div>
 
-  <section class="grid">
+  <?php if ($msg): ?>
+    <div class="alert alert-success">
+      <i class="material-icons">check_circle</i>
+      <div><?= htmlspecialchars($msg) ?></div>
+      <button class="btn-close" onclick="this.parentElement.style.display='none'"></button>
+    </div>
+  <?php endif; ?>
+
+  <div class="tenant-grid">
     <!-- Profile -->
-    <div class="card">
-      <h3>Profile</h3>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">person</i>Profile Information</h3>
       <form method="post">
         <input type="hidden" name="update_profile" value="1">
-        <input name="first_name" value="<?= htmlspecialchars($u['first_name']) ?>" placeholder="First name" required>
-        <input name="last_name" value="<?= htmlspecialchars($u['last_name']) ?>" placeholder="Last name" required>
-        <input name="business_name" value="<?= htmlspecialchars($u['business_name'] ?? '') ?>" placeholder="Business name">
-        <input name="location" value="<?= htmlspecialchars($u['location'] ?? '') ?>" placeholder="Location">
-        <button class="btn">Save Profile</button>
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" name="first_name" value="<?= htmlspecialchars($u['first_name']) ?>" required>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" name="last_name" value="<?= htmlspecialchars($u['last_name']) ?>" required>
+        </div>
+        <div class="form-group">
+          <label>Business Name</label>
+          <input type="text" name="business_name" value="<?= htmlspecialchars($u['business_name'] ?? '') ?>">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" name="location" value="<?= htmlspecialchars($u['location'] ?? '') ?>">
+        </div>
+        <button type="submit" class="btn btn-primary">Save Profile</button>
       </form>
     </div>
 
     <!-- Email -->
-    <div class="card">
-      <h3>Email</h3>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">email</i>Email Address</h3>
       <form method="post">
         <input type="hidden" name="update_email" value="1">
-        <input type="email" name="email" value="<?= htmlspecialchars($u['email']) ?>" required>
-        <button class="btn">Update Email</button>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" value="<?= htmlspecialchars($u['email']) ?>" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Email</button>
       </form>
     </div>
 
     <!-- Password -->
-    <div class="card">
-      <h3>Password</h3>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">lock</i>Password</h3>
       <form method="post">
         <input type="hidden" name="update_password" value="1">
-        <input type="password" name="password" placeholder="New password" required>
-        <button class="btn">Change Password</button>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" name="password" placeholder="Enter new password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Change Password</button>
       </form>
     </div>
 
     <!-- Two-Factor Authentication -->
-    <div class="card">
-      <h3>Two-Factor Authentication (2FA)</h3>
-      <p>Protect your account with an extra layer of security.</p>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">security</i>Two-Factor Auth (2FA)</h3>
+      <p style="font-size: 14px; margin-bottom: 12px;">Protect your account with an extra layer of security.</p>
       <form method="post">
         <input type="hidden" name="toggle_2fa" value="1">
-        <label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-          <input type="checkbox" name="enable_2fa" <?= $u['two_factor_enabled'] ? 'checked' : '' ?>>
-          <span><?= $u['two_factor_enabled'] ? 'Enabled' : 'Disabled' ?></span>
-        </label>
-        <button class="btn" style="margin-top: 15px;">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="enable_2fa" name="enable_2fa" <?= $u['two_factor_enabled'] ? 'checked' : '' ?>>
+            <label for="enable_2fa" style="margin: 0; flex: 1;">Enable 2FA</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
           <?= $u['two_factor_enabled'] ? 'Disable 2FA' : 'Enable 2FA' ?>
         </button>
       </form>
     </div>
 
     <!-- Trusted Devices -->
-    <div class="card">
-      <h3>Trusted Devices (<?= count($trustedDevices) ?>)</h3>
-      <p>Devices that have been trusted on this account.</p>
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">devices</i>Trusted Devices (<?= count($trustedDevices) ?>)</h3>
+      <p style="font-size: 14px; margin-bottom: 12px;">Devices that have been trusted on this account.</p>
       <?php if (!empty($trustedDevices)): ?>
-        <div style="margin-top: 15px;">
+        <div>
           <?php foreach ($trustedDevices as $device): ?>
-            <div style="padding: 12px; margin-bottom: 10px; background-color: #f5f5f5; border-radius: 6px; border-left: 4px solid #2196F3;">
-              <div style="margin-bottom: 8px;">
-                <strong><?= htmlspecialchars($device['device_name']) ?></strong>
-                <small style="color: #666;"> • IP: <?= htmlspecialchars($device['ip_address']) ?></small>
-              </div>
-              <small style="color: #999;">
+            <div class="device-item">
+              <div class="device-name"><?= htmlspecialchars($device['device_name']) ?></div>
+              <div class="device-meta">
+                IP: <?= htmlspecialchars($device['ip_address']) ?><br>
                 Created: <?= date('M d, Y H:i', strtotime($device['created_at'])) ?><br>
                 Last used: <?= date('M d, Y H:i', strtotime($device['last_used_at'])) ?>
-              </small>
+              </div>
             </div>
           <?php endforeach; ?>
         </div>
       <?php else: ?>
-        <p style="color: #999; margin-top: 10px;">No trusted devices yet.</p>
+        <p style="color: var(--secondary); font-size: 14px;">No trusted devices yet.</p>
       <?php endif; ?>
     </div>
 
-    <!-- Logout -->
-    <div class="card">
-      <h3>Logout</h3>
-      <a class="btn outline" href="/rentflow/public/logout.php">Log out</a>
+    <!-- Danger Zone -->
+    <div class="tenant-card" style="border-left: 4px solid var(--danger);">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: var(--danger);">warning</i>Danger Zone</h3>
+      <p style="font-size: 14px; margin-bottom: 12px;">Logout from all devices to ensure account security.</p>
+      <a class="btn btn-danger btn-small" href="/rentflow/public/logout.php">Logout All Devices</a>
     </div>
-  </section>
+
+    <!-- Contact Support -->
+    <div class="tenant-card">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">contact_support</i>Contact Support</h3>
+      <p style="font-size: 14px; margin-bottom: 12px;">Need help? Reach out to our support team for assistance with any issues or questions.</p>
+      <a class="btn btn-secondary btn-small" href="support.php">
+        <i class="material-icons" style="font-size: 18px; vertical-align: middle;">message</i> Contact Support
+      </a>
+    </div>
+
+    <!-- Logout -->
+    <div class="tenant-card" style="border-left: 4px solid #FF6B6B;">
+      <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: #FF6B6B;">exit_to_app</i>Logout</h3>
+      <p style="font-size: 14px; margin-bottom: 12px;">Sign out from your current session.</p>
+      <a class="btn btn-secondary btn-small" href="/rentflow/public/logout.php">
+        <i class="material-icons" style="font-size: 18px; vertical-align: middle;">exit_to_app</i> Logout
+      </a>
+    </div>
+  </div>
 </main>
 
-<footer class="footer">
-  <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
-</footer>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
  

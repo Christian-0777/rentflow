@@ -8,7 +8,9 @@ require_once __DIR__.'/../config/auth.php';
 // ✅ Use plain string for role check
 require_role('admin');
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $msg = '';
 $adminId = $_SESSION['user']['id'] ?? 0;
 
