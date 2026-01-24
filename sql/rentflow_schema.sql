@@ -1,6 +1,9 @@
+-- ============================================================================
 -- phpMyAdmin SQL Dump
--- RentFlow Database Schema (Full with all altered columns & indexes)
--- Generated 2026-01-15
+-- RentFlow Database Schema (Full)
+-- Includes Application Database User
+-- Generated: 2026-01-15
+-- ============================================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -8,8 +11,42 @@ SET time_zone = "+00:00";
 
 /*!40101 SET NAMES utf8mb4 */;
 
-CREATE DATABASE IF NOT EXISTS `rentflow` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ============================================================================
+-- SECTION 1: DATABASE CREATION
+-- ============================================================================
+
+CREATE DATABASE IF NOT EXISTS `rentflow`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE `rentflow`;
+
+-- ============================================================================
+-- SECTION 2: APPLICATION DATABASE USER
+-- ============================================================================
+-- User: rentflow_team
+-- Password: rentflow_3006
+-- Purpose: Used by RentFlow application (NOT root)
+
+CREATE USER IF NOT EXISTS 'rentflow_team'@'localhost'
+IDENTIFIED BY 'rentflow_3006';
+
+-- Ensure clean permission state
+REVOKE ALL PRIVILEGES ON `rentflow`.* FROM 'rentflow_team'@'localhost';
+
+-- Grant required permissions
+GRANT
+  SELECT, INSERT, UPDATE, DELETE,
+  CREATE, DROP, INDEX, ALTER,
+  EXECUTE
+ON `rentflow`.*
+TO 'rentflow_team'@'localhost';
+
+FLUSH PRIVILEGES;
+
+-- ============================================================================
+-- SECTION 3: TABLE STRUCTURES
+-- ============================================================================
 
 -- --------------------------------------------------------
 -- Table structure for `users`
@@ -43,7 +80,7 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for `trusted_devices`
+-- trusted_devices
 -- --------------------------------------------------------
 CREATE TABLE `trusted_devices` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -54,17 +91,20 @@ CREATE TABLE `trusted_devices` (
   `user_agent` text DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
-  `last_used_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `last_used_at` datetime DEFAULT current_timestamp()
+    ON UPDATE current_timestamp(),
   `is_active` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `device_fingerprint` (`device_fingerprint`),
   UNIQUE KEY `device_token` (`device_token`),
   KEY `idx_user_id` (`user_id`),
-  CONSTRAINT `trusted_devices_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+  CONSTRAINT `trusted_devices_ibfk_1`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for `password_resets`
+-- password_resets
 -- --------------------------------------------------------
 CREATE TABLE `password_resets` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -78,11 +118,13 @@ CREATE TABLE `password_resets` (
   UNIQUE KEY `unique_token` (`token`),
   KEY `user_id_idx` (`user_id`),
   KEY `token_idx` (`token`),
-  CONSTRAINT `password_resets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+  CONSTRAINT `password_resets_ibfk_1`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for `stalls`
+-- stalls
 -- --------------------------------------------------------
 CREATE TABLE `stalls` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -98,7 +140,7 @@ CREATE TABLE `stalls` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for `leases`
+-- leases
 -- --------------------------------------------------------
 CREATE TABLE `leases` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -110,12 +152,14 @@ CREATE TABLE `leases` (
   PRIMARY KEY (`id`),
   KEY `tenant_id` (`tenant_id`),
   KEY `stall_id` (`stall_id`),
-  CONSTRAINT `leases_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `leases_ibfk_2` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`)
+  CONSTRAINT `leases_ibfk_1`
+    FOREIGN KEY (`tenant_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `leases_ibfk_2`
+    FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for `payments`
+-- payments
 -- --------------------------------------------------------
 CREATE TABLE `payments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -129,7 +173,8 @@ CREATE TABLE `payments` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `transaction_id` (`transaction_id`),
   KEY `lease_id` (`lease_id`),
-  CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`lease_id`) REFERENCES `leases` (`id`)
+  CONSTRAINT `payments_ibfk_1`
+    FOREIGN KEY (`lease_id`) REFERENCES `leases` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
