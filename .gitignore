@@ -1,0 +1,57 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Composer dependencies
+vendor/
+composer.lock
+
+# Uploads and temporary files
+uploads/
+public/uploads/
+
+# Logs
+*.log
+logs/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+.directory
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.editorconfig
+
+# PHP-specific
+*.php~
+.php_cs.cache
+
+# Node modules (if used)
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Database files
+*.sql
+!sql/rentflow_schema.sql
+!sql/seed.sql
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Cache files
+.cache/
+cache/
+
+# Windows
+desktop.ini
