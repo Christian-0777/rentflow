@@ -150,10 +150,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8">
   <title>Tenant Login - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/login.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/login-page.css">
 </head>
 <body class="public">
 
@@ -163,16 +164,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <main class="content">
   <div class="card-container">
-    <h1>Tenant Login</h1>
-    <?php if($msg): ?><div class="alert error"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
+    <h1><i class="material-icons" style="vertical-align: middle; font-size: 32px;">login</i> Tenant Login</h1>
+    
+    <?php if($msg): ?>
+      <div class="alert error">
+        <i class="material-icons">error</i>
+        <div><?= htmlspecialchars($msg) ?></div>
+      </div>
+    <?php endif; ?>
+    
     <form method="post">
-      <input name="email" type="text" placeholder="Email or Tenant ID" required>
-      <input name="password" type="password" placeholder="Password" required>
+      <div class="form-group">
+        <label>Email or Tenant ID</label>
+        <input name="email" type="text" placeholder="example@email.com or TEN-001" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input name="password" type="password" placeholder="Enter your password" required>
+      </div>
       <button type="submit" class="btn">Login</button>
     </form>
-    <p style="margin: 15px 0; padding: 10px; background-color: #e8f4f8; border-radius: 4px; font-size: 13px; color: #0B3C5D;">
-      <strong>ℹ Note:</strong> If your account has 2FA enabled and this is a new device, you'll need to verify with a one-time code sent to your email.
-    </p>
+    
+    <div class="info-box">
+      <i class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 8px;">info</i>
+      <strong>Note:</strong> If 2FA is enabled and this is a new device, you'll verify with a code sent to your email.
+    </div>
+    
     <p>
       <a href="forgot_password.php">Forgot Password?</a>
     </p>
@@ -185,6 +202,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <footer class="footer">
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

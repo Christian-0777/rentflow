@@ -67,6 +67,7 @@ $recent = $pdo->query("
   <meta charset="UTF-8">
   <title>Dashboard - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
@@ -177,6 +178,7 @@ $recent = $pdo->query("
 <footer class="footer">
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
+<script src="/rentflow/public/assets/js/rentflow.js"></script>
 <script src="/rentflow/public/assets/js/table.js"></script>
 </body>
 </html>

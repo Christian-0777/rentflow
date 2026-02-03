@@ -31,9 +31,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- CSS links -->
   <link href="/rentflow/public/assets/css/base.css" rel="stylesheet">
+  <link href="/rentflow/public/assets/css/auth.css" rel="stylesheet">
   <link href="/rentflow/public/assets/css/layout.css" rel="stylesheet">
-  <link href="/rentflow/public/assets/css/auth-common.css" rel="stylesheet">
-  <link href="/rentflow/public/assets/css/login.css" rel="stylesheet">
   <link href="/rentflow/public/assets/css/components.css" rel="stylesheet">
   <link href="/rentflow/public/assets/css/treasury.css" rel="stylesheet">
 </head>

@@ -36,7 +36,8 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/bootstrap-custom.css">
 </head>
 <body>
 
@@ -103,7 +104,7 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
               <td><?= date('M d, Y', strtotime($r['lease_start'])) ?></td>
               <td>
                 <?php if ($r['picture_path']): ?>
-                  <img src="<?= htmlspecialchars($r['picture_path']) ?>" alt="Stall Picture" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer; border-radius: 6px;" onclick="openImageModal('<?= htmlspecialchars($r['picture_path']) ?>', '<?= htmlspecialchars($r['stall_no']) ?>')">
+                  <img src="<?= htmlspecialchars($r['picture_path']) ?>" alt="Stall Picture" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer; border-radius: 6px;" onclick="openImageModal('<?= htmlspecialchars($r['picture_path']) ?>', 'Stall <?= htmlspecialchars($r['stall_no']) ?>')">
                 <?php else: ?>
                   <span style="color: var(--secondary);">No Photo</span>
                 <?php endif; ?>
@@ -139,13 +140,13 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($s['location']) ?></td>
             <td>
               <?php if ($s['picture_path']): ?>
-                <img src="<?= htmlspecialchars($s['picture_path']) ?>" alt="Stall Picture" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer; border-radius: 6px;" onclick="openImageModal('<?= htmlspecialchars($s['picture_path']) ?>', '<?= htmlspecialchars($s['stall_no']) ?>')">
+                <img src="<?= htmlspecialchars($s['picture_path']) ?>" alt="Stall Picture" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer; border-radius: 6px;" onclick="openImageModal('<?= htmlspecialchars($s['picture_path']) ?>', 'Stall <?= htmlspecialchars($s['stall_no']) ?>')">
               <?php else: ?>
                 <span style="color: var(--secondary);">No Photo</span>
               <?php endif; ?>
             </td>
             <td>
-              <button class="btn btn-primary btn-small" type="button" onclick="openApplyModal('<?= htmlspecialchars($s['stall_no']) ?>', '<?= htmlspecialchars($s['type']) ?>')">
+              <button class="btn btn-primary btn-small" type="button" onclick="openApplyModal('<?= htmlspecialchars($s['stall_no']) ?>', '<?= htmlspecialchars($s['type']) ?>', 'applyModal')">
                 <i class="material-icons" style="font-size: 16px;">add</i> Apply
               </button>
             </td>
@@ -159,11 +160,10 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
 <!-- Apply Modal -->
 <div id="applyModal" class="modal">
   <div class="modal-content">
-    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <button class="modal-close">&times;</button>
     <h2 style="margin-bottom: 16px;">Apply for Stall</h2>
     
-    <div class="modal-backdrop" style="display: none;"></div>
-    <form id="applyForm" action="/rentflow/public/api/stalls_apply.php" method="post" enctype="multipart/form-data">
+    <form id="applyForm" action="/rentflow/api/stalls_apply.php" method="post" enctype="multipart/form-data">
       <input type="hidden" id="modalStallNo" name="stall_no" value="">
       <input type="hidden" id="modalType" name="type" value="">
 
@@ -196,7 +196,7 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
-        <button class="btn btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-secondary" type="button" onclick="closeModal('applyModal')">Cancel</button>
         <button class="btn btn-primary" type="submit">Submit Application</button>
       </div>
     </form>
@@ -206,69 +206,53 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
 <!-- Image Viewer Modal -->
 <div id="imageModal" class="modal">
   <div class="modal-content" style="max-width: 90%; width: auto; text-align: center;">
-    <button class="modal-close" style="float: right;" onclick="closeImageModal()">&times;</button>
-    <h3 id="imageModalTitle" style="margin-bottom: 16px; clear: both;">Stall Picture</h3>
+    <button class="modal-close">&times;</button>
+    <h3 id="imageModalTitle" style="margin-bottom: 16px;">Stall Picture</h3>
     <img id="modalImage" src="" alt="Stall Picture" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;">
   </div>
 </div>
+<footer style="background-color: var(--white); border-top: 1px solid var(--border); padding: 30px 20px; margin-top: 40px;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 30px;">
+      <div>
+        <h4 style="color: var(--primary); font-weight: 600; margin-bottom: 12px; font-size: 16px;">About RentFlow</h4>
+        <p style="font-size: 14px; color: var(--secondary); margin: 0; line-height: 1.6;">A modern stall rental management system for Baliwag Public Market with transparent pricing and easy payment tracking.</p>
+      </div>
+      <div>
+        <h4 style="color: var(--primary); font-weight: 600; margin-bottom: 12px; font-size: 16px;">Quick Links</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li style="margin-bottom: 8px;"><a href="dashboard.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Dashboard</a></li>
+          <li style="margin-bottom: 8px;"><a href="stalls.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Stalls</a></li>
+          <li style="margin-bottom: 8px;"><a href="payments.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Payments</a></li>
+          <li><a href="support.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Support</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color: var(--primary); font-weight: 600; margin-bottom: 12px; font-size: 16px;">Account</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li style="margin-bottom: 8px;"><a href="profile.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Profile</a></li>
+          <li style="margin-bottom: 8px;"><a href="account.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Settings</a></li>
+          <li style="margin-bottom: 8px;"><a href="notifications.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Notifications</a></li>
+          <li><a href="/rentflow/public/logout.php" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Logout</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color: var(--primary); font-weight: 600; margin-bottom: 12px; font-size: 16px;">Legal</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li style="margin-bottom: 8px;"><a href="#" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Terms of Service</a></li>
+          <li style="margin-bottom: 8px;"><a href="#" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Privacy Policy</a></li>
+          <li><a href="#" style="color: var(--secondary); text-decoration: none; font-size: 14px; transition: color 0.2s;">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div style="border-top: 1px solid var(--border); padding-top: 20px; text-align: center; color: var(--secondary); font-size: 13px;">
+      <p style="margin: 0;">&copy; <?= date('Y') ?> RentFlow. All rights reserved. | Baliwag Public Market Stall Management System</p>
+    </div>
+  </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function openApplyModal(stallNo, type) {
-  document.getElementById('modalStallNo').value = stallNo;
-  document.getElementById('modalType').value = type;
-  document.getElementById('applyModal').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('applyModal').classList.remove('show');
-  document.getElementById('applyForm').reset();
-}
-
-function openImageModal(imagePath, stallNo) {
-  document.getElementById('modalImage').src = imagePath;
-  document.getElementById('imageModalTitle').textContent = 'Stall ' + stallNo;
-  document.getElementById('imageModal').classList.add('show');
-}
-
-function closeImageModal() {
-  document.getElementById('imageModal').classList.remove('show');
-}
-
-// Hide the stall picture modal and apply for stall modal by default
-const stallPictureModal = document.getElementById('imageModal');
-stallPictureModal.style.display = 'none';
-
-const applyForStallModal = document.getElementById('applyModal');
-applyForStallModal.style.display = 'none';
-
-// Show the stall picture modal when the picture is clicked
-const stallPictures = document.querySelectorAll('.stall-picture');
-stallPictures.forEach(picture => {
-    picture.addEventListener('click', function() {
-        stallPictureModal.style.display = 'block';
-    });
-});
-
-// Show the apply for stall modal when the apply button is clicked
-const applyButtons = document.querySelectorAll('.apply-button');
-applyButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        applyForStallModal.style.display = 'block';
-    });
-});
-
-window.onclick = function(event) {
-  const applyModal = document.getElementById('applyModal');
-  const imageModal = document.getElementById('imageModal');
-  
-  if (event.target == applyModal) {
-    closeModal();
-  }
-  if (event.target == imageModal) {
-    closeImageModal();
-  }
-}
-</script>
+<script src="/rentflow/public/assets/js/rentflow.js"></script>
+<script src="/rentflow/public/assets/js/stalls-page.js"></script>
 </body>
 </html>

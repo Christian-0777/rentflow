@@ -28,9 +28,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <meta charset="UTF-8">
   <title>Admin Login - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/login.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth.css">
 </head>
 <body class="admin">
 

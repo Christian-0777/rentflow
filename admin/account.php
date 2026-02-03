@@ -40,6 +40,7 @@ $u = $stmt->fetch();
   <meta charset="UTF-8">
   <title>Account - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>

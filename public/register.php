@@ -218,9 +218,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <meta charset="UTF-8">
   <title>Tenant Registration - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/signup.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/register-page.css">
 </head>
 <body class="public">
 
@@ -230,99 +232,78 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
 <main class="content">
   <div class="card-container">
-    <h1>Tenant Registration</h1>
-    <?php if($msg): ?><div class="alert success"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
+    <h1><i class="material-icons" style="vertical-align: middle; font-size: 32px;">person_add</i> Tenant Registration</h1>
+    
+    <?php if($msg): ?>
+      <div class="alert success">
+        <i class="material-icons">check_circle</i>
+        <div><?= htmlspecialchars($msg) ?></div>
+      </div>
+    <?php endif; ?>
+    
     <?php if(!$show_code_form): ?>
     <form id="registerForm" method="post">
-      <input name="first_name" placeholder="First name" required>
-      <input name="last_name" placeholder="Last name" required>
-      <input name="email" type="email" placeholder="Email" required>
-      <input name="password" type="password" placeholder="Password" required>
-      <input name="password_confirm" type="password" placeholder="Re-enter password" required>
-      <button type="submit" name="register" class="btn">Register</button>
+      <div class="form-group">
+        <label>First Name</label>
+        <input name="first_name" placeholder="John" required>
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input name="last_name" placeholder="Doe" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input name="email" type="email" placeholder="example@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input name="password" type="password" placeholder="Minimum 6 characters" required>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input name="password_confirm" type="password" placeholder="Re-enter your password" required>
+      </div>
+      <button type="submit" name="register" class="btn">Create Account</button>
     </form>
     <p>Already registered? <a href="confirm.php">Confirm your account</a></p>
+    <p>Have an account? <a href="login.php">Sign In</a></p>
     <?php else: ?>
     <form method="post">
       <input type="hidden" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
-      <input name="code" placeholder="Enter 7-digit confirmation code" maxlength="7" required>
+      <div class="form-group">
+        <label>Confirmation Code</label>
+        <input name="code" placeholder="7-digit code from your email" maxlength="7" required>
+      </div>
       <input type="hidden" id="enable2faHidden" name="enable2fa" value="0">
       <input type="hidden" id="trustDeviceHidden" name="trustDevice" value="0">
       <div style="margin: 20px 0; max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: #f9f9f9; border-radius: 6px;">
-        <h3 style="margin-top: 0;">Terms and Agreement</h3>
-        <p>By using RentFlow, you agree to timely payments, proper stall use, and compliance with market rules.</p>
+        <h4 style="margin-top: 0; color: var(--primary);">Terms and Agreement</h4>
+        <p style="font-size: 13px;">By using RentFlow, you agree to timely payments, proper stall use, and compliance with market rules.</p>
         
-        <h4>Terms of Service</h4>
-        <p>
+        <h5 style="color: var(--primary);">Terms of Service</h5>
+        <p style="font-size: 12px;">
           Users of RentFlow agree to use the platform in compliance with all applicable laws and regulations. 
-          You are responsible for maintaining the confidentiality of your account credentials and for all activities 
-          that occur under your account. Violations of these terms may result in account suspension or termination.
+          Violations may result in account suspension.
         </p>
         
-        <h4>Privacy Policy</h4>
-        <p>
-          <strong>Information We Collect:</strong> We collect personal information such as your name, email address, 
-          tenant ID, contact details, and payment information to facilitate stall rental and management services.
-        </p>
-        <p>
-          <strong>Data Protection:</strong> Your personal data is protected using industry-standard encryption and security measures. 
-          We do not share your personal information with third parties without your explicit consent, except as required by law.
-        </p>
-        <p>
-          <strong>Cookie Usage:</strong> RentFlow uses cookies to enhance user experience and maintain session security. 
-          You can manage cookie preferences in your browser settings.
-        </p>
-        <p>
-          <strong>Data Retention:</strong> We retain your information as long as necessary to provide services and maintain 
-          legal records. You may request data deletion by contacting our support team.
+        <h5 style="color: var(--primary);">Payment and Rental Policies</h5>
+        <p style="font-size: 12px;">
+          All rent payments must be made by the due date. Late payments may incur penalties. 
+          Renters agree to use stalls in accordance with market regulations.
         </p>
         
-        <h4>Payment and Rental Policies</h4>
-        <p>
-          <strong>Timely Payments:</strong> All rent payments must be made by the due date specified in your rental agreement. 
-          Late payments may incur penalties as per the platform's arrears policy.
-        </p>
-        <p>
-          <strong>Stall Usage:</strong> Renters agree to use their assigned stall in accordance with market regulations and 
-          maintain the premises in good condition. Unauthorized modifications are prohibited.
-        </p>
-        <p>
-          <strong>Compliance:</strong> All users must comply with local market authority rules and RentFlow's code of conduct.
-        </p>
-        
-        <h4>User Responsibilities</h4>
-        <ul style="margin: 10px 0; padding-left: 20px;">
-          <li>Provide accurate and complete registration information</li>
-          <li>Maintain payment schedules and avoid arrears</li>
-          <li>Respect market and platform rules</li>
-          <li>Report any suspicious activities or unauthorized access immediately</li>
-          <li>Use the platform solely for legitimate rental purposes</li>
-        </ul>
-        
-        <h4>Limitation of Liability</h4>
-        <p>
-          RentFlow provides its services on an "as-is" basis. We are not liable for indirect, incidental, or consequential damages 
-          arising from your use of the platform. Users are encouraged to resolve disputes through our support system.
-        </p>
-        
-        <h4>Contact and Support</h4>
-        <p>
-          For privacy concerns, terms clarification, or general support, please contact our support team through the 
-          RentFlow messaging system or email us at support@rentflow.local.
-        </p>
-        
-        <label style="margin-top: 15px; display: flex; align-items: flex-start; gap: 10px;">
-          <input type="checkbox" id="termsCheckbox" required style="margin-top: 5px;"> 
-          <span>I have read and accept the Terms and Agreement, Privacy Policy, and all related policies</span>
+        <label style="margin-top: 15px; display: flex; align-items: flex-start; gap: 10px; font-size: 13px;">
+          <input type="checkbox" id="termsCheckbox" required style="margin-top: 3px; flex-shrink: 0;"> 
+          <span>I agree to the Terms and Agreement</span>
         </label>
         
-        <label style="margin-top: 15px; display: flex; align-items: flex-start; gap: 10px;">
-          <input type="checkbox" id="enable2fa" style="margin-top: 5px;"> 
-          <span>Enable Two-Factor Authentication (2FA) for enhanced security</span>
+        <label style="margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; font-size: 13px;">
+          <input type="checkbox" id="enable2fa" style="margin-top: 3px; flex-shrink: 0;"> 
+          <span>Enable 2FA for enhanced security</span>
         </label>
         
-        <label style="margin-top: 15px; display: flex; align-items: flex-start; gap: 10px;">
-          <input type="checkbox" id="trustDevice" style="margin-top: 5px;"> 
+        <label style="margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; font-size: 13px;">
+          <input type="checkbox" id="trustDevice" style="margin-top: 3px; flex-shrink: 0;"> 
           <span>Trust this device (skip 2FA on next login)</span>
         </label>
       </div>
@@ -339,28 +320,24 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <!-- OTP Verification Modal -->
 <div id="otpModal" class="modal" <?php echo $show_otp_modal ? 'style="display: flex;"' : 'style="display: none;"'; ?>>
   <div class="modal-content" style="width: 90%; max-width: 400px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
-    <h2 style="margin-top: 0; color: #0B3C5D;">Verify Your Device</h2>
-    <p style="color: #666;">We've sent a verification code to your email. Enter it below to complete your registration.</p>
+    <h2 style="margin-top: 0; color: var(--primary);">Verify Your Device</h2>
+    <p style="color: #666; font-size: 14px;">We've sent a verification code to your email. Enter it below to complete registration.</p>
     
     <form id="otpForm" style="margin: 20px 0;">
       <input type="text" id="otpInput" placeholder="Enter 6-digit code" maxlength="6" required 
              style="width: 100%; padding: 12px; font-size: 18px; text-align: center; letter-spacing: 10px; border: 2px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
       
-      <label style="display: flex; align-items: center; gap: 10px; margin: 15px 0; font-size: 14px;">
-        <input type="checkbox" id="trustDeviceModal" checked>
-        <span>Trust this device (skip 2FA on next login)</span>
+      <label style="display: flex; align-items: center; gap: 10px; margin: 15px 0; font-size: 13px;">
+        <input type="checkbox" id="trustDeviceModal" checked style="flex-shrink: 0;">
+        <span>Trust this device for future logins</span>
       </label>
       
-      <button type="submit" class="btn" style="width: 100%; background-color: #0B3C5D; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 10px;">
-        Verify & Complete Registration
+      <button type="submit" class="btn" style="width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 10px;">
+        Verify & Complete
       </button>
     </form>
     
     <p id="otpMessage" style="margin: 10px 0; min-height: 20px; font-size: 13px;"></p>
-    
-    <p style="font-size: 12px; color: #999; margin-top: 15px;">
-      Didn't receive the code? Check your spam folder or <a href="javascript:location.reload();" style="color: #0B3C5D; text-decoration: none;">try again</a>
-    </p>
   </div>
 </div>
 
@@ -394,70 +371,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 }
 </style>
 
-<script>
-<?php if ($show_otp_modal): ?>
-document.getElementById('otpForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const otpInput = document.getElementById('otpInput');
-  const trustDevice = document.getElementById('trustDeviceModal').checked;
-  const message = document.getElementById('otpMessage');
-  
-  if (otpInput.value.length !== 6) {
-    message.textContent = 'Please enter a 6-digit code';
-    message.style.color = '#d9534f';
-    return;
-  }
-  
-  try {
-    const response = await fetch(window.location.pathname, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'verify_otp=1&otp=' + otpInput.value + '&trust_device=' + (trustDevice ? '1' : '0')
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      message.textContent = 'Success! Redirecting...';
-      message.style.color = '#5cb85c';
-      setTimeout(() => {
-        window.location.href = result.redirect;
-      }, 1500);
-    } else {
-      message.textContent = result.message || 'Invalid OTP';
-      message.style.color = '#d9534f';
-      otpInput.value = '';
-      otpInput.focus();
-    }
-  } catch (error) {
-    message.textContent = 'An error occurred. Please try again.';
-    message.style.color = '#d9534f';
-  }
-});
-<?php endif; ?>
-
-document.getElementById('termsCheckbox').addEventListener('change', function() {
-  const btn = document.getElementById('continueBtn');
-  if (this.checked) {
-    btn.disabled = false;
-    btn.style.backgroundColor = '#0B3C5D';
-  } else {
-    btn.disabled = true;
-    btn.style.backgroundColor = 'gray';
-  }
-});
-
-document.getElementById('enable2fa').addEventListener('change', function() {
-  document.getElementById('enable2faHidden').value = this.checked ? '1' : '0';
-});
-
-document.getElementById('trustDevice').addEventListener('change', function() {
-  document.getElementById('trustDeviceHidden').value = this.checked ? '1' : '0';
-});
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/rentflow/public/assets/js/register-page.js"></script>
 
 </body>
 </html>

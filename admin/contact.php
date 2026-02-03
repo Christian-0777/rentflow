@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <meta charset="UTF-8">
   <title>Contact Service - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>

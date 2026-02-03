@@ -168,6 +168,7 @@ foreach ($stall_breakdown as $type => $data) {
   <meta charset="UTF-8">
   <title>Reports - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>

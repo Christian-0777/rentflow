@@ -109,31 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
   <meta charset="UTF-8">
   <title>Terms & Policies - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/signup.css">
-  <style>
-    .policies-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .policies-content {
-      max-height: 500px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 20px;
-      background: #f9f9f9;
-      margin-bottom: 20px;
-    }
-    .policies-content h4 {
-      margin-top: 20px;
-      color: #0B3C5D;
-    }
-    .policies-content ul {
-      margin-left: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/terms-page.css">
 </head>
 <body class="public">
 
@@ -252,31 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
 
-<script>
-document.getElementById('acceptCheckbox').addEventListener('change', function() {
-  const btn = document.getElementById('acceptBtn');
-  if (this.checked) {
-    btn.disabled = false;
-    btn.style.backgroundColor = '#0B3C5D';
-  } else {
-    btn.disabled = true;
-    btn.style.backgroundColor = 'gray';
-  }
-});
-
-// Enable/Disable Remember Device checkbox based on 2FA checkbox
-const enable2faCheckbox = document.getElementById('enable2fa');
-const rememberDeviceCheckbox = document.getElementById('rememberDevice');
-
-enable2faCheckbox.addEventListener('change', function() {
-  if (this.checked) {
-    rememberDeviceCheckbox.disabled = false;
-  } else {
-    rememberDeviceCheckbox.disabled = true;
-    rememberDeviceCheckbox.checked = false;
-  }
-});
-</script>
+<script src="/rentflow/public/assets/js/terms-page.js"></script>
 
 </body>
 </html>

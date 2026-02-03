@@ -1,0 +1,533 @@
+/* ========================================
+   RentFlow Bootstrap Custom Theme
+   CONSOLIDATED: Replaces both bootstrap-custom.css and tenant-bootstrap.css
+   
+   IMPORTANT: Import base.css FIRST
+   <link rel="stylesheet" href="assets/css/base.css">
+   <link rel="stylesheet" href="assets/css/bootstrap-custom.css">
+   
+   All variables, resets, and base styles are now in base.css
+   This file contains component-specific overrides only
+   ======================================== */
+
+/* ========== HEADER & NAVIGATION ========== */
+.header {
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  z-index: var(--z-header);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.site-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-extra-bold);
+  color: var(--primary);
+  text-decoration: none;
+  margin: 0;
+}
+
+.header-nav {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: center;
+  list-style: none;
+}
+
+.header-nav a {
+  color: var(--text);
+  text-decoration: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-base);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.header-nav a:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ========== TENANT NAVBAR ========== */
+.tenant-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  z-index: var(--z-header);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.tenant-navbar-brand {
+  font-size: 24px;
+  font-weight: var(--font-weight-extra-bold);
+  color: var(--primary);
+  text-decoration: none;
+  padding: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.tenant-navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-sm);
+  gap: var(--spacing-xs);
+  max-width: 100%;
+}
+
+.tenant-navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  list-style: none;
+  flex-wrap: nowrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.tenant-navbar-nav li {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tenant-navbar-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) 10px;
+  color: var(--secondary);
+  text-decoration: none;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.tenant-navbar-nav a:hover {
+  background-color: var(--light);
+  color: var(--primary);
+}
+
+.tenant-navbar-nav a.active {
+  color: var(--primary);
+  background-color: var(--primary-light);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tenant-navbar-nav .material-icons {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  margin-left: var(--spacing-sm);
+}
+
+/* ========== MAIN CONTENT ========== */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+}
+
+main.layout {
+  padding-top: var(--spacing-xl);
+  padding-bottom: var(--spacing-2xl);
+}
+
+main.content {
+  padding-top: var(--spacing-2xl);
+}
+
+main.tenant-content {
+  margin-left: 0;
+  margin-top: 56px;
+  padding: var(--spacing-lg);
+  min-height: calc(100vh - 56px);
+  background-color: var(--light);
+}
+
+/* ========== HERO SECTION ========== */
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  padding: 60px var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+  box-shadow: var(--shadow-md);
+}
+
+.hero h1 {
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-extra-bold);
+  margin-bottom: var(--spacing-md);
+  line-height: var(--line-height-tight);
+}
+
+.hero p {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-2xl);
+  opacity: 0.95;
+}
+
+.cta {
+  display: flex;
+  gap: var(--spacing-lg);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ========== PAGE HEADER ========== */
+.page-header {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: var(--font-weight-extra-bold);
+  margin-bottom: var(--spacing-xs);
+  color: var(--text);
+}
+
+.page-header p {
+  font-size: var(--font-size-md);
+  color: var(--secondary);
+}
+
+/* ========== CARDS SECTION ========== */
+.cards {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.cards h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  margin-bottom: var(--spacing-xl);
+}
+
+.tenant-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.tenant-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.tenant-card h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-md);
+  color: var(--text);
+}
+
+.tenant-card h4 {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  color: var(--secondary);
+}
+
+.tenant-card p {
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  margin-bottom: var(--spacing-sm);
+  line-height: var(--line-height-normal);
+}
+
+.tenant-card small {
+  font-size: var(--font-size-xs);
+  color: var(--secondary);
+  display: block;
+  margin-top: var(--spacing-sm);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: var(--font-weight-extra-bold);
+  color: var(--primary);
+  margin: var(--spacing-sm) 0;
+}
+
+.tenant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ========== BUTTON VARIANTS ========== */
+.btn-block {
+  width: 100%;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: var(--white);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #289141;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: var(--white);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #da1b41;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ========== TABLE ENHANCEMENTS ========== */
+.table-responsive {
+  overflow-x: auto;
+  border-radius: var(--radius-xl);
+}
+
+.table-responsive table {
+  margin: 0;
+}
+
+/* ========== FORM GROUP ENHANCEMENTS ========== */
+.form-group {
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+  color: var(--text);
+  font-size: var(--font-size-sm);
+}
+
+/* ========== TENANT FOOTER ========== */
+.footer {
+  background-color: var(--white);
+  border-top: 1px solid var(--border);
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--secondary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-2xl);
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+  .header {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+
+  .site-title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .header-nav {
+    gap: var(--spacing-md);
+  }
+
+  .header-nav a {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 13px;
+  }
+
+  main {
+    padding: var(--spacing-md);
+  }
+
+  main.layout {
+    padding-top: var(--spacing-md);
+  }
+
+  .hero {
+    padding: 40px var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .hero h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  .hero p {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .cta {
+    gap: var(--spacing-md);
+  }
+
+  .btn {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+  }
+
+  .cards h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .table-responsive {
+    font-size: 13px;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: var(--spacing-md);
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+  }
+
+  .modal-close {
+    right: var(--spacing-md);
+    top: var(--spacing-md);
+  }
+
+  .modal h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .tenant-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  main.tenant-content {
+    margin-top: 56px;
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .site-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .header-nav {
+    gap: var(--spacing-sm);
+    font-size: 12px;
+  }
+
+  .header-nav a {
+    padding: var(--spacing-xs) var(--spacing-xs);
+  }
+
+  main {
+    padding: var(--spacing-sm);
+  }
+
+  .hero h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .hero p {
+    font-size: var(--font-size-md);
+  }
+
+  .cards h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .btn {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 13px;
+  }
+
+  .modal-content {
+    width: 98%;
+    padding: var(--spacing-lg);
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table tbody img {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .page-header h1 {
+    font-size: var(--font-size-xl);
+  }
+}

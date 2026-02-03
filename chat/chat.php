@@ -32,24 +32,7 @@ if ($peerId) {
   <div id="chatThread" class="card"></div>
 </main>
 
-<script src="/public/assets/js/notification.js"></script>
-<script>
-// Poll chat thread
-setInterval(() => {
-  fetch('/api/chat_fetch.php?peer=<?= $peerId ?>&limit=50')
-    .then(r => r.json())
-    .then(items => {
-      const el = document.getElementById('chatThread');
-      el.innerHTML = items.map(i => `
-        <div class="chat-item">
-          <strong>${i.sender_id==<?= $userId ?> ? 'You' : 'Peer'}:</strong>
-          <span>${escapeHtml(i.message)}</span>
-          <small>${i.created_at}</small>
-        </div>
-      `).join('');
-    });
-}, 2000);
-
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
-</script>
+<script src="/rentflow/public/assets/js/rentflow.js"></script>
+<script src="/rentflow/public/assets/js/notifications.js"></script>
+<script src="/rentflow/public/assets/js/chat-page.js"></script>
 <?php require_once __DIR__.'/../partials/footer.php'; ?>

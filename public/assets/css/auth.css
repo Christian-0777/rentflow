@@ -1,0 +1,367 @@
+/* ========================================
+   RentFlow Authentication Pages CSS
+   CONSOLIDATED: Merges auth-common.css, login.css, and signup.css
+   
+   IMPORTANT: Import base.css FIRST
+   <link rel="stylesheet" href="assets/css/base.css">
+   <link rel="stylesheet" href="assets/css/auth.css">
+   ======================================== */
+
+/* ========== AUTH PAGE LAYOUT ========== */
+body.public main.content,
+body.admin main.content,
+body.treasury main.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 200px);
+  padding-top: 80px;
+}
+
+body.public main.content form,
+body.admin main.content form,
+body.treasury main.content form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ========== AUTH HEADINGS ========== */
+body.public main.content h1,
+body.admin main.content h1,
+body.treasury main.content h1 {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  color: var(--primary);
+  font-size: var(--font-size-3xl);
+}
+
+body.public main.content h2,
+body.admin main.content h2,
+body.treasury main.content h2 {
+  text-align: center;
+  color: var(--primary);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ========== AUTH ALERTS ========== */
+body.public main.content .alert,
+body.admin main.content .alert,
+body.treasury main.content .alert {
+  margin-bottom: var(--spacing-lg);
+  position: static;
+  animation: none;
+}
+
+/* ========== AUTH FORM CONTAINER ========== */
+main.content > form,
+main.content > .card-container {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-2xl);
+  width: 100%;
+  max-width: 500px;
+}
+
+/* ========== AUTH FORM ELEMENTS ========== */
+body.public main.content input,
+body.admin main.content input,
+body.treasury main.content input,
+body.public main.content select,
+body.admin main.content select,
+body.treasury main.content select {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body.public main.content input:focus,
+body.admin main.content input:focus,
+body.treasury main.content input:focus,
+body.public main.content select:focus,
+body.admin main.content select:focus,
+body.treasury main.content select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 6px rgba(11, 60, 93, 0.2);
+}
+
+/* ========== AUTH BUTTONS ========== */
+body.public main.content button,
+body.admin main.content button,
+body.treasury main.content button {
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-top: var(--spacing-sm);
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+  width: 100%;
+}
+
+body.public main.content button:hover,
+body.admin main.content button:hover,
+body.treasury main.content button:hover {
+  background-color: #083051;
+}
+
+body.public main.content button:active,
+body.admin main.content button:active,
+body.treasury main.content button:active {
+  transform: scale(0.98);
+}
+
+/* ========== AUTH FORM GROUPS ========== */
+body.public main.content .form-group,
+body.admin main.content .form-group,
+body.treasury main.content .form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+body.public main.content .form-group label,
+body.admin main.content .form-group label,
+body.treasury main.content .form-group label {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Checkbox styling for terms acceptance */
+body.public main.content input[type="checkbox"],
+body.admin main.content input[type="checkbox"],
+body.treasury main.content input[type="checkbox"] {
+  width: auto;
+  margin-right: var(--spacing-sm);
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+/* ========== AUTH PARAGRAPHS & LINKS ========== */
+body.public main.content p,
+body.admin main.content p,
+body.treasury main.content p {
+  text-align: center;
+  margin-top: var(--spacing-xl);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+body.public main.content p a,
+body.admin main.content p a,
+body.treasury main.content p a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+}
+
+body.public main.content p a:hover,
+body.admin main.content p a:hover,
+body.treasury main.content p a:hover {
+  text-decoration: underline;
+  color: var(--primary-dark);
+}
+
+/* ========== AUTH CARDS ========== */
+.login-card,
+.register-card {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-2xl);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  margin-top: 60px;
+}
+
+/* ========== AUTH MODALS ========== */
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  z-index: var(--z-modal);
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background-color: var(--white);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--border);
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin: auto;
+}
+
+.modal-close {
+  position: absolute;
+  right: var(--spacing-lg);
+  top: var(--spacing-lg);
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-base);
+}
+
+.modal-close:hover {
+  color: var(--text);
+  background-color: var(--light);
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+  body.public main.content,
+  body.admin main.content,
+  body.treasury main.content {
+    min-height: auto;
+    padding-top: 70px;
+    padding-bottom: var(--spacing-xl);
+  }
+
+  body.public main.content h1,
+  body.admin main.content h1,
+  body.treasury main.content h1 {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  body.public main.content h2,
+  body.admin main.content h2,
+  body.treasury main.content h2 {
+    font-size: var(--font-size-lg);
+  }
+
+  main.content > form,
+  main.content > .card-container,
+  .login-card,
+  .register-card {
+    padding: var(--spacing-xl);
+    max-width: 100%;
+    margin: var(--spacing-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  body.public main.content input,
+  body.admin main.content input,
+  body.treasury main.content input,
+  body.public main.content select,
+  body.admin main.content select,
+  body.treasury main.content select {
+    font-size: 16px;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+  }
+
+  body.public main.content button,
+  body.admin main.content button,
+  body.treasury main.content button {
+    padding: var(--spacing-lg) var(--spacing-lg);
+    font-size: var(--font-size-md);
+  }
+
+  body.public main.content p,
+  body.admin main.content p,
+  body.treasury main.content p {
+    font-size: 13px;
+    margin-top: var(--spacing-lg);
+  }
+
+  .modal-content {
+    width: 90%;
+    max-height: 70vh;
+    padding: var(--spacing-xl);
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .login-card,
+  .register-card {
+    padding: var(--spacing-xl);
+    margin: var(--spacing-lg);
+    margin-top: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  body.public main.content,
+  body.admin main.content,
+  body.treasury main.content {
+    padding-top: 65px;
+  }
+
+  body.public main.content h1,
+  body.admin main.content h1,
+  body.treasury main.content h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  main.content > form,
+  main.content > .card-container,
+  .login-card,
+  .register-card {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-sm);
+  }
+
+  body.public main.content input,
+  body.admin main.content input,
+  body.treasury main.content input,
+  body.public main.content select,
+  body.admin main.content select,
+  body.treasury main.content select {
+    font-size: 16px;
+    padding: var(--spacing-md);
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 65vh;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+}

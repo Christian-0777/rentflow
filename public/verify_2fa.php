@@ -146,7 +146,8 @@ $user_first_name = $_SESSION['pending_login']['first_name'] ?? 'User';
   <meta charset="UTF-8">
   <title>2FA Verification - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/auth.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/verify_2fa.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>

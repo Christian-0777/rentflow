@@ -39,6 +39,7 @@ if ($to) {
   <meta charset="UTF-8">
   <title>Notifications - RentFlow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
@@ -123,7 +124,6 @@ if ($to) {
   </div>
 </div>
 
-    <div class="modal-backdrop" style="display: none;"></div>
 <!-- Application Details Modal -->
 <div id="applicationModal" class="modal" style="display: none;">
   <div class="modal-content" style="max-width: 600px;">
