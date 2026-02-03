@@ -60,7 +60,6 @@ $u = $stmt->fetch();
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
       <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i></a></li>
       <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i></a></li>
-      <li><a href="login.php">Logout</a></li>
     </ul>
   </nav>
 </header>

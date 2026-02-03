@@ -59,12 +59,11 @@ $ar = $arrears->fetch();
 <nav class="tenant-navbar">
   <div class="tenant-navbar-content">
     <ul class="tenant-navbar-nav">
-      <li><a href="dashboard.php" title="Dashboard"><i class="material-icons">dashboard</i><span>Dashboard</span></a></li>
-      <li><a href="payments.php" class="active" title="Payments"><i class="material-icons">payment</i><span>Payments</span></a></li>
-      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span>Stalls</span></a></li>
-      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span>Notifications</span></a></li>
-      <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span>Profile</span></a></li>
-      <li><a href="account.php" title="Settings"><i class="material-icons">settings</i><span>Settings</span></a></li>
+      <li><a href="dashboard.php" title="Dashboard"><i class="material-icons">dashboard</i><span></span></a></li>
+      <li><a href="payments.php" class="active" title="Payments"><i class="material-icons">payment</i><span></span></a></li>
+      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span></span></a></li>
+      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span></span></a></li>
+      <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span></span></a></li>
     </ul>
   </div>
 </nav>
