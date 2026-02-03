@@ -156,7 +156,8 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
 <head>
   <meta charset="UTF-8">
   <title>Admin Stalls - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">  <link rel="stylesheet" href="/rentflow/public/assets/css/base.css">  <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/rentflow/public/assets/css/admin.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="admin">
