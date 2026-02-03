@@ -98,6 +98,9 @@ $user = $info->fetch();
       <a class="btn btn-secondary btn-small" href="account.php">
         <i class="material-icons" style="font-size: 18px;">settings</i> Account Settings
       </a>
+      <a class="btn btn-danger btn-small" href="/rentflow/public/logout.php" style="margin-left: 8px;">
+        <i class="material-icons" style="font-size: 18px;">logout</i> Logout
+      </a>
     </div>
   </div>
 </main>

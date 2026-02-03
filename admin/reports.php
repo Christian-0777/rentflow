@@ -167,9 +167,14 @@ foreach ($stall_breakdown as $type => $data) {
 <head>
   <meta charset="UTF-8">
   <title>Reports - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Admin CSS -->
   <link rel="stylesheet" href="/rentflow/public/assets/css/admin.css">
+  <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Chart.js and Export Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -187,7 +192,7 @@ foreach ($stall_breakdown as $type => $data) {
       <li><a href="dashboard.php">Dashboard</a></li>
       <li><a href="tenants.php">Tenants</a></li>
       <li><a href="payments.php">Payments</a></li>
-      <li><a href="reports.php" class="active">Reports</a></li>
+      <li><a href="reports.php">Reports</a></li>
       <li><a href="stalls.php">Stalls</a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
       <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i></a></li>

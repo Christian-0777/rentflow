@@ -1,0 +1,16 @@
+/* Tenant Bootstrap - BACKUP (partial) */
+/* Original file copied to backup_old_assets on Feb 3, 2026 */
+:root {
+  --primary: #0B3C5D;
+  --primary-dark: #082a42;
+  --primary-light: #e6f2f8;
+  --golden: #F2B705;
+  --secondary: #6B7280;
+  --success: #1F7A1F;
+  --danger: #8B1E1E;
+  --warning: #F2B705;
+  --light: #f8f9fa;
+  --white: #fff;
+  --dark: #050505;
+  --border: #ddd;
+}

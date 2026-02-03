@@ -1,0 +1,21 @@
+/* Login Page Styles - BACKUP */
+/* Original file copied to backup_old_assets on Feb 3, 2026 */
+
+/* Card Design for Login Pages */
+.login-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  margin-top: 60px;
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    padding: 25px;
+    margin: 15px;
+  }
+}

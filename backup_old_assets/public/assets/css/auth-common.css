@@ -1,0 +1,21 @@
+/* Shared Authentication & Form Styles - BACKUP */
+/* Original file copied to backup_old_assets on Feb 3, 2026 */
+
+/* Layout for Authentication Pages */
+body.public main.content,
+body.admin main.content,
+body.treasury main.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 200px);
+  padding-top: 80px;
+}
+
+/* Form Layout */
+body.public main.content form,
+body.admin main.content form,
+body.treasury main.content form {
+  display: flex;
+}

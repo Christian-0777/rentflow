@@ -37,8 +37,12 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <head>
   <meta charset="UTF-8">
   <title>Contact Service - RentFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Admin CSS -->
   <link rel="stylesheet" href="/rentflow/public/assets/css/admin.css">
+  <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="admin">
@@ -51,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     <ul>
       <li><a href="dashboard.php">Dashboard</a></li>
       <li><a href="tenants.php">Tenants</a></li>
-      <li><a href="payments.php" class="active">Payments</a></li>
+      <li><a href="payments.php">Payments</a></li>
       <li><a href="reports.php">Reports</a></li>
       <li><a href="stalls.php">Stalls</a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
