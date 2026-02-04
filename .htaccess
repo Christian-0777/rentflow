@@ -1,12 +1,14 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Redirect /admin to admin/login.php
-    RewriteRule ^admin/?$ admin/login.php [L]
-    
-    # Redirect root to public/index.php
-    RewriteCond %{REQUEST_URI} !^/admin
+    # Skip rewrite rules for existing files and directories
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ public/index.php [L]
+    
+    # Redirect /admin (with or without trailing slash) to admin/login.php
+    RewriteRule ^admin/?$ admin/login.php [L,QSA]
+    
+    # Redirect everything else to public/index.php
+    RewriteCond %{REQUEST_URI} !^/admin
+    RewriteRule ^(.*)$ public/index.php [L,QSA]
 </IfModule>

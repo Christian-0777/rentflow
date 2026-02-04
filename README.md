@@ -62,16 +62,13 @@ RentFlow is a web-based rent management system designed to help administrators e
    ```
    http://localhost/phpmyadmin
    ```
-2. Create a database named:
+2. Import the schema files in the following order:
 
-   ```
-   rentflow_db
-   ```
-3. Import:
+   * First, import `sql/rentflow_schema_1.sql` to create the database
+   * Then, import `sql/rentflow_schema_2.sql` to create the database user and set permissions
+   * Finally, import `sql/rentflow_schema_3.sql` to create all tables
 
-   ```
-   sql/rentflow_schema.sql
-   ```
+3. The database will be created as `rentflow` with the user `rentflow_team` (password: `rentflow_3006`)
 
 ---
 
@@ -97,25 +94,23 @@ C:\xampp\htdocs\rentflow
 
 ---
 
-## 4️⃣ Install Composer & PHPMailer
+## 4️⃣ Install Composer & Dependencies
 
 1. Download Composer:
    [https://getcomposer.org/download/](https://getcomposer.org/download/)
 2. Install Composer globally
-3. Clone the Composer + PHPMailer setup:
+3. Open **Command Prompt** and navigate to the project:
 
    ```bash
    cd C:\xampp\htdocs\rentflow
-   git clone https://github.com/Christian-0777/composerandphpmailer.git
    ```
-4. Install dependencies:
+4. Install Composer, PHPMailer, and SendGrid API dependencies:
 
    ```bash
-   cd composerandphpmailer
-   composer install
+   composer require phpmailer/phpmailer sendgrid/sendgrid
    ```
 
-This will generate the `vendor/` folder.
+This will generate the `vendor/` folder with all required dependencies.
 
 ---
 

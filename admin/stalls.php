@@ -166,15 +166,14 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
 
   <nav class="navigation">
     <ul>
-      <li><a href="dashboard.php">Dashboard</a></li>
-      <li><a href="tenants.php">Tenants</a></li>
-      <li><a href="payments.php" class="active">Payments</a></li>
-      <li><a href="reports.php">Reports</a></li>
-      <li><a href="stalls.php">Stalls</a></li>
-      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i></a></li>
-      <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i></a></li>
-      <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i></a></li>
-      <li><a href="login.php">Logout</a></li>
+      <li><a href="dashboard.php"><i class="material-icons">dashboard</i>Dashboard</a></li>
+      <li><a href="tenants.php"><i class="material-icons">people</i>Tenants</a></li>
+      <li><a href="payments.php"><i class="material-icons">payments</i>Payments</a></li>
+      <li><a href="reports.php"><i class="material-icons">assessment</i>Reports</a></li>
+      <li><a href="stalls.php"><i class="material-icons">store</i>Stalls</a></li>
+      <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i>Notifications</a></li>
+      <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i>Account</a></li>
+      <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i>Contact</a></li>
     </ul>
   </nav>
 </header>
