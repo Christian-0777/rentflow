@@ -752,6 +752,11 @@ foreach ($stall_breakdown as $type => $data) {
   // Export full page as PDF
   function exportPageAsPDF() {
     const element = document.querySelector('main.content');
+    if (!element) {
+      alert('Error: Could not find report content to export.');
+      return;
+    }
+    
     const opt = {
       margin: 10,
       filename: 'rentflow_report_' + new Date().toISOString().split('T')[0] + '.pdf',
@@ -759,7 +764,15 @@ foreach ($stall_breakdown as $type => $data) {
       html2canvas: { scale: 2 },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
-    html2pdf().set(opt).from(element).save();
+    
+    html2pdf()
+      .set(opt)
+      .from(element)
+      .save()
+      .catch(error => {
+        console.error('PDF export error:', error);
+        alert('Error exporting PDF. Please try again.');
+      });
   }
 
   // Export full page as Word (DOCX)
