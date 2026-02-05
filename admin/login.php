@@ -1,6 +1,6 @@
 <?php
 // admin/login.php
-// One-click Admin login (no credentials)
+// DB-backed Admin login
 
 require_once __DIR__.'/../config/db.php';
 if (session_status() === PHP_SESSION_NONE) {
@@ -8,17 +8,38 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $msg = '';
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-  // Fetch the first admin user from DB
-  $stmt = $pdo->query("SELECT * FROM users WHERE role='admin' LIMIT 1");
-  $user = $stmt->fetch();
+$msg_type = 'error';
+// show success message when redirected after registration
+if (isset($_GET['registered'])) {
+  $msg = 'Registration successful. You can now log in.';
+  $msg_type = 'success';
+}
 
-  if ($user) {
-    $_SESSION['user'] = $user;
-    header('Location: dashboard.php'); // relative path inside /admin
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+  $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+  if ($email === '' || $password === '') {
+    $msg = 'Please provide both email and password.';
   } else {
-    $msg = 'No admin account found.';
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE role = 'admin' AND email = ? LIMIT 1");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+
+    if ($user) {
+      if ($user['confirmed'] != 1) {
+        $msg = 'Your account is not confirmed yet. Please check your email to confirm.';
+      } elseif (password_verify($password, $user['password_hash'])) {
+        // successful login
+        $_SESSION['user'] = $user;
+        header('Location: dashboard.php');
+        exit;
+      } else {
+        $msg = 'Invalid credentials.';
+      }
+    } else {
+      $msg = 'Invalid credentials or no admin account found.';
+    }
   }
 }
 ?>
@@ -43,10 +64,19 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <div class="card-container">
     <h1>Admin Login</h1>
     <?php if($msg): ?>
-      <div class="alert error"><?= htmlspecialchars($msg) ?></div>
+      <div class="alert <?= $msg_type === 'success' ? 'success' : 'error' ?>"><?= htmlspecialchars($msg) ?></div>
     <?php endif; ?>
-    <form method="post">
-      <button class="btn">Login</button>
+    <form method="post" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required>
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required>
+
+      <div style="margin-top:12px;">
+        <button class="btn" type="submit">Login</button>
+        <a href="register.php" style="margin-left:12px;">Register</a>
+      </div>
     </form>
   </div>
 </main>

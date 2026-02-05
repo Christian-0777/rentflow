@@ -102,8 +102,6 @@ $rows = $pdo->query("
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="admin">
-
-<!-- 🔹 Integrated Header -->
 <header class="header">
   <h1 class="site-title">RentFlow</h1>
 
