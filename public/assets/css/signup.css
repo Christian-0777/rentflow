@@ -1,6 +1,11 @@
 /* Sign Up / Registration Page Styles - Signup Specific Only */
 /* Common styles are in auth-common.css */
 
+/* Global Font */
+* {
+  font-family: "Arial Black", Arial, sans-serif;
+}
+
 /* Card Design for Register Pages */
 .register-card {
   background-color: #fff;

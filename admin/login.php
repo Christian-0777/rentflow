@@ -35,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: dashboard.php');
         exit;
       } else {
-        $msg = 'Invalid credentials.';
+        $msg = 'Credentials Not Match';
       }
     } else {
-      $msg = 'Invalid credentials or no admin account found.';
+      $msg = 'No Account Found, Register First';
     }
   }
 }

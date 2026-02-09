@@ -1,5 +1,10 @@
 /* 2FA Verification Modal Styles */
 
+/* Global Font */
+* {
+  font-family: "Arial Black", Arial, sans-serif;
+}
+
 .modal {
   display: flex;
   position: fixed;

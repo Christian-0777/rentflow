@@ -138,6 +138,14 @@ if ($to) {
   </div>
 </div>
 
+<!-- Image Preview Modal -->
+<div id="imagePreviewModal" class="modal" style="display: none;">
+  <div class="modal-content" style="background: black; max-width: 90%; max-height: 90vh; padding: 0; position: relative;">
+    <span onclick="closeImagePreview()" style="position: absolute; top: 10px; right: 20px; font-size: 36px; font-weight: bold; cursor: pointer; color: white; z-index: 10;">&times;</span>
+    <img id="previewImage" src="" alt="Preview" style="max-width: 100%; max-height: 90vh; display: block; margin: auto;">
+  </div>
+</div>
+
 <!-- 🔹 Integrated Footer -->
 <footer class="footer">
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
@@ -227,15 +235,15 @@ function openApplicationModal(message) {
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
             <div style="text-align: center;">
               <strong style="display: block; margin-bottom: 8px; font-size: 12px;">Business Permit</strong>
-              <img src="${data.business_permit_path}" alt="Business Permit" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="window.open('${data.business_permit_path}', '_blank')">
+              <img src="${data.business_permit_path}" alt="Business Permit" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="openImagePreview('${data.business_permit_path}')">
             </div>
             <div style="text-align: center;">
               <strong style="display: block; margin-bottom: 8px; font-size: 12px;">Valid ID</strong>
-              <img src="${data.valid_id_path}" alt="Valid ID" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="window.open('${data.valid_id_path}', '_blank')">
+              <img src="${data.valid_id_path}" alt="Valid ID" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="openImagePreview('${data.valid_id_path}')">
             </div>
             <div style="text-align: center;">
               <strong style="display: block; margin-bottom: 8px; font-size: 12px;">Signature</strong>
-              <img src="${data.signature_path}" alt="Signature" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="window.open('${data.signature_path}', '_blank')">
+              <img src="${data.signature_path}" alt="Signature" style="max-width: 100%; max-height: 120px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="openImagePreview('${data.signature_path}')">
             </div>
           </div>
         </div>
@@ -298,6 +306,23 @@ function processApplication(action) {
     alert('An error occurred: ' + error.message);
   });
 }
+
+function openImagePreview(imagePath) {
+  document.getElementById('previewImage').src = imagePath;
+  document.getElementById('imagePreviewModal').style.display = 'block';
+}
+
+function closeImagePreview() {
+  document.getElementById('imagePreviewModal').style.display = 'none';
+}
+
+// Close image preview when clicking outside of image
+document.addEventListener('click', function(event) {
+  const imagePreviewModal = document.getElementById('imagePreviewModal');
+  if (event.target === imagePreviewModal) {
+    closeImagePreview();
+  }
+});
 </script>
 
 </body>

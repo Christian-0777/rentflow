@@ -1,5 +1,10 @@
 /* RentFlow Tenant Pages - Bootstrap Enhanced with Facebook-Inspired Design */
 
+/* Global Font */
+* {
+  font-family: "Arial Black", Arial, sans-serif;
+}
+
 :root {
   --primary: #0B3C5D;
   --primary-dark: #082a42;

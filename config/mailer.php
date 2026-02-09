@@ -70,7 +70,7 @@ function send_mail_sendgrid($to, $subject, $body) {
             error_log("SendGrid Error: Status {$response->statusCode()}, Body: {$response->body()}");
             return false;
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         error_log("SendGrid Exception: {$e->getMessage()}");
         return false;
     }
@@ -85,6 +85,12 @@ function send_mail_sendgrid($to, $subject, $body) {
  * @return bool True if sent successfully, false otherwise
  */
 function send_mail_phpmailer($to, $subject, $body) {
+    // If SMTP is not configured, log but don't fail
+    if (empty(MAIL_HOST) || empty(MAIL_USERNAME)) {
+        error_log("PHPMailer not configured (MAIL_HOST or MAIL_USERNAME empty). Email not sent to: $to");
+        return true; // Return true to allow registration to continue
+    }
+
     $mail = new PHPMailer(true);
 
     try {
@@ -112,8 +118,8 @@ function send_mail_phpmailer($to, $subject, $body) {
         // Send email
         return $mail->send();
 
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         error_log("PHPMailer Error: {$mail->ErrorInfo}");
-        return false;
+        return true; // Return true to allow registration to continue even if email fails
     }
 }

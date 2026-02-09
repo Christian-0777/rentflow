@@ -100,6 +100,11 @@ $rows = $pdo->query("
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .table tbody td {
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body class="admin">
 <header class="header">
@@ -127,39 +132,66 @@ $rows = $pdo->query("
         <th>Stall</th>
         <th>Tenant</th>
         <th>Business</th>
+        <th>Previous Payment</th>
+        <th>Previous Status</th>
         <th>Total Arrears</th>
         <th>Previous Arrears</th>
         <th>Next Payment</th>
-        <th>Paid Status</th>
+        <th>Next Payment Remarks</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      <?php foreach ($rows as $r): ?>
+      <?php foreach ($rows as $r): 
+        // Get previous payment details
+        $pp = $pdo->prepare("SELECT payment_date, amount, remarks FROM payments WHERE lease_id=? ORDER BY payment_date DESC LIMIT 1");
+        $pp->execute([$r['lease_id']]);
+        $lastPayment = $pp->fetch();
+      ?>
         <tr>
           <td><?= htmlspecialchars($r['stall_no']) ?></td>
           <td><a href="tenant_profile.php?id=<?= $r['tenant_id'] ?>"><?= htmlspecialchars($r['full_name']) ?> (<?= htmlspecialchars($r['tenant_code']) ?>)</a></td>
           <td><?= htmlspecialchars($r['business_name']) ?></td>
+          <td>
+            <?php
+              if ($lastPayment) {
+                echo htmlspecialchars($lastPayment['payment_date']).' — ₱'.number_format($lastPayment['amount'],2);
+              } else {
+                echo '—';
+              }
+            ?>
+          </td>
+          <td>
+            <?php
+              if ($lastPayment) {
+                echo '<small>'.htmlspecialchars($lastPayment['remarks'] ?? 'Paid').'</small>';
+              } else {
+                echo '—';
+              }
+            ?>
+          </td>
           <td>₱<?= number_format($r['total_arrears'] ?? 0,2) ?></td>
           <td><a href="#" onclick="showArrearsHistory(<?= $r['lease_id'] ?>, <?= ($r['total_arrears'] ?? 0) - ($r['current_month_penalties'] ?? 0) ?>)">₱<?= number_format(($r['total_arrears'] ?? 0) - ($r['current_month_penalties'] ?? 0), 2) ?></a></td>
           <td>
             <?= $r['next_due']
               ? htmlspecialchars($r['next_due']).' — ₱'.number_format($r['next_amount'],2)
               : '—' ?>
+          </td>
+          <td>
             <?php
-              $pp = $pdo->prepare("SELECT payment_date, amount, remarks FROM payments WHERE lease_id=? ORDER BY payment_date DESC LIMIT 2");
-              $pp->execute([$r['lease_id']]);
-              $prev = $pp->fetchAll();
-              if ($prev) {
-                echo '<br><small>Previous:<br>';
-                foreach ($prev as $p) {
-                  echo htmlspecialchars($p['payment_date']).' — ₱'.number_format($p['amount'],2).' ('.htmlspecialchars($p['remarks'] ?? 'Paid').')<br>';
+              if ($r['next_due']) {
+                echo '<small>';
+                if (strtotime($r['next_due']) < strtotime(date('Y-m-d'))) {
+                  echo 'Overdue';
+                } else {
+                  echo 'Pending';
                 }
                 echo '</small>';
+              } else {
+                echo '<small>Paid</small>';
               }
             ?>
           </td>
-          <td><span class="badge"><?= htmlspecialchars(strtoupper($r['paid_status'])) ?></span></td>
           <td>
             <a href="notifications.php?to=<?= $r['tenant_id'] ?>" class="btn small" style="margin-right: 5px;">Message</a>
             <select onchange="handlePaymentAction(this.value, <?= $r['lease_id'] ?>)">

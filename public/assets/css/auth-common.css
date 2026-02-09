@@ -1,6 +1,11 @@
 /* Shared Authentication & Form Styles */
 /* This file contains common styles used by both login and signup pages */
 
+/* Global Font */
+* {
+  font-family: "Arial Black", Arial, sans-serif;
+}
+
 /* Layout for Authentication Pages */
 body.public main.content,
 body.admin main.content,

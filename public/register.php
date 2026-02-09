@@ -183,17 +183,55 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             
             // If trust device is checked, add to trusted devices
             if ($trust_device) {
-                $deviceFingerprint = hash('sha256', $_SERVER['HTTP_USER_AGENT'] . $_SERVER['REMOTE_ADDR'] . date('Y-m-d'));
-                $deviceToken = bin2hex(random_bytes(32));
-                
-                $pdo->prepare("INSERT INTO trusted_devices (user_id, device_fingerprint, device_token, user_agent, ip_address) 
-                             VALUES (?, ?, ?, ?, ?)")->execute([
-                    $user_id,
-                    $deviceFingerprint,
-                    $deviceToken,
-                    $_SERVER['HTTP_USER_AGENT'],
-                    $_SERVER['REMOTE_ADDR']
-                ]);
+            $deviceFingerprint = hash('sha256', ($_SERVER['HTTP_USER_AGENT'] ?? '') . ($_SERVER['REMOTE_ADDR'] ?? '') . date('Y-m-d'));
+            $deviceToken = bin2hex(random_bytes(32));
+
+            // Derive a friendly device name similar to verify_2fa.php
+            $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            if (strpos($ua, 'Chrome') !== false) {
+              $browser = 'Chrome';
+            } elseif (strpos($ua, 'Firefox') !== false) {
+              $browser = 'Firefox';
+            } elseif (strpos($ua, 'Safari') !== false) {
+              $browser = 'Safari';
+            } elseif (strpos($ua, 'Edge') !== false) {
+              $browser = 'Edge';
+            } else {
+              $browser = 'Unknown Browser';
+            }
+
+            if (strpos($ua, 'Windows') !== false) {
+              $os = 'Windows';
+            } elseif (strpos($ua, 'Mac') !== false) {
+              $os = 'Mac';
+            } elseif (strpos($ua, 'Linux') !== false) {
+              $os = 'Linux';
+            } elseif (strpos($ua, 'Android') !== false) {
+              $os = 'Android';
+            } elseif (strpos($ua, 'iPhone') !== false) {
+              $os = 'iPhone';
+            } else {
+              $os = 'Unknown OS';
+            }
+
+            $deviceName = $browser . ' on ' . $os;
+
+            // Prepare and execute with error checking so failures are logged
+            $insert = $pdo->prepare("INSERT INTO trusted_devices (user_id, device_fingerprint, device_name, device_token, user_agent, ip_address) 
+                   VALUES (?, ?, ?, ?, ?, ?)");
+            $ok = $insert->execute([
+              $user_id,
+              $deviceFingerprint,
+              $deviceName,
+              $deviceToken,
+              $ua,
+              $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+
+            if (!$ok) {
+              $err = $insert->errorInfo();
+              error_log('trusted_devices insert failed: ' . implode(' | ', $err));
+            }
             }
             
             // Set session
