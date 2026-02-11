@@ -49,6 +49,7 @@ echo json_encode([
     'email' => $application['email'],
     'business_name' => $application['business_name'],
     'business_description' => $application['business_description'],
+    'business_logo_path' => $application['business_logo_path'],
     'type' => $application['type'],
     'business_permit_path' => $application['business_permit_path'],
     'valid_id_path' => $application['valid_id_path'],

@@ -6,7 +6,211 @@ This document tracks all minor and major changes made to the RentFlow project.
 
 ## **MAJOR CHANGES**
 
-### 1. **Stalls Management & Display Enhancement** (Latest)
+### 1. **Stall Application System & Admin Approval Workflow** (Latest)
+- **Version**: 1.4.0
+- **Status**: Implemented & Tested
+- **Description**: Complete redesign of stall application process with tenant application submission and admin approval/stall assignment workflow
+
+#### Files Created:
+- `admin/applications.php` - Admin dashboard for reviewing and managing stall applications
+- `api/assign_stall_to_application.php` - API endpoint to assign stalls to approved applications
+
+#### Files Modified:
+- `tenant/stalls.php` - Updated with new "Apply Now" flow (no stall selection, stall type selection instead)
+- `api/stalls_apply.php` - Complete rewrite with improved file handling and validation
+- `api/approve_application.php` - Updated to only handle approval/rejection (stall assignment removed from auto-flow)
+- `api/get_application_details.php` - Added business_logo_path field to response
+- `sql/rentflow.sql` - Added `business_logo_path` column to `stall_applications` table
+
+#### Database Changes:
+```sql
+ALTER TABLE `stall_applications` ADD COLUMN `business_logo_path` varchar(255) DEFAULT NULL AFTER `business_description`;
+```
+
+#### Key Features:
+
+**Tenant Application Submission:**
+1. Tenant clicks "Apply Now" button on stalls page
+2. Fills application modal with:
+   - **Stall Type** (Wet, Dry, Apparel) - Required dropdown selection
+   - **Business Name** - Required text input
+   - **Business Logo** - Optional image (PNG, JPG, JPEG, GIF, WebP)
+   - **Business Description** - Required textarea
+   - **Business Permit** - Required file (PDF, PNG, JPG, JPEG, DOC, DOCX)
+   - **Valid ID** - Required file (PDF, PNG, JPG, JPEG, DOC, DOCX)
+   - **Digital Signature** - Required file (PDF, PNG, JPG, JPEG)
+3. Submits application with all required documents
+4. Application status: **PENDING**
+5. Notification sent to admin
+6. Flash message confirms successful submission with Application ID
+
+**Admin Application Review Dashboard** (`admin/applications.php`):
+1. Displays list of all stall applications with filtering
+2. Filter buttons: All, Pending, Approved, Rejected
+3. Application cards show:
+   - Status badge (color-coded: yellow=pending, green=approved, red=rejected)
+   - Business name
+   - Tenant name and email
+   - Stall type requested
+   - Submission date and time
+   - Application ID
+4. "View" button opens detailed modal
+
+**Application Details Modal:**
+1. Displays all tenant and application information:
+   - Tenant name, email, phone
+   - Business name and type
+   - Business description
+   - Application ID and submission date
+2. Document viewing with preview:
+   - **Business Logo**: Image preview (if uploaded)
+   - **Business Permit**: Image preview or download link
+   - **Valid ID**: Image preview or download link
+   - **Digital Signature**: Image preview or download link
+3. Status badge showing current status
+4. Action buttons for PENDING applications:
+   - **Approve** - Approves application and shows stall assignment form
+   - **Reject** - Rejects application with confirmation
+5. Stall Assignment Form (shown after approval):
+   - Dropdown to select available stall (filtered by requested type)
+   - Lease start date input field (calendar picker)
+   - Monthly rent input field
+   - "Assign Stall" and "Cancel" buttons
+
+**Stall Assignment Process:**
+1. Admin clicks "Approve" on pending application
+2. Application status changes to APPROVED
+3. Stall assignment form displays with available stalls
+4. Admin selects stall, enters lease start date, and enters monthly rent
+5. Click "Assign Stall" to complete assignment
+6. System automatically:
+   - Creates lease record with selected lease start date
+   - Creates first due date (30 days from lease start date)
+   - Initializes arrears record
+   - Updates stall status to "occupied"
+   - Sends notification to tenant with stall assignment details and lease start date
+
+**File Upload & Storage:**
+- Files uploaded to: `/uploads/applications/` (dedicated directory)
+- Unique filenames: `{timestamp}_{random_hash}.{extension}`
+- Prevents filename conflicts and snooping
+
+#### API Endpoints:
+
+**POST `/api/stalls_apply.php`**
+- Accepts: multipart/form-data
+- Required fields: `type`, `business_name`, `business_description`, `permit`, `valid_id`, `signature`
+- Optional fields: `business_logo`
+- Returns: Redirect to stalls page with flash message
+- Validates all file types and handles errors gracefully
+
+**POST `/api/approve_application.php`**
+- Parameters: `application_id`, `action` (approve or reject)
+- Creates APPROVED status (stall assignment now handled separately)
+- Sends notification to tenant
+- Returns: JSON response
+
+**POST `/api/assign_stall_to_application.php`** (NEW)
+- Parameters: `application_id`, `stall_no`, `lease_start_date`, `monthly_rent`
+- Creates lease with tenant and stall with specified lease start date
+- Creates first due date (30 days from lease start date)
+- Initializes arrears
+- Updates stall status to occupied
+- Sends detailed notification to tenant with lease start date
+- Returns: JSON response
+
+**GET `/api/get_application_details.php`**
+- Parameters: `id` (application ID)
+- Returns: Complete application details as JSON including business_logo_path
+
+#### User Experience Flow:
+
+**Tenant Flow:**
+1. View available stalls (informational only)
+2. Click "Apply Now" button
+3. Select stall type
+4. Fill in business information
+5. Upload required documents
+6. Submit application
+7. Receive confirmation with Application ID
+8. Wait for admin review
+9. Log and check notifications for approval/rejection
+10. If approved, receive notification when stall is assigned
+
+**Admin Flow:**
+1. Navigate to Applications page
+2. Filter by status if needed
+3. Click "View" on any application
+4. Review all details and documents
+5. Click "Approve" or "Reject"
+6. If approved, stall assignment form appears
+7. Select available stall, choose lease start date, and enter rent
+8. Click "Assign Stall"
+9. System creates lease with selected date and notifies tenant
+
+#### Security Features:
+- File type validation for all uploads
+- Unique filename generation with timestamp and hash
+- Sanitized HTML output for all user data
+- Admin-only access to applications page (require_role check)
+- Secure file storage in dedicated directory
+- One-time file operations prevent re-upload issues
+- Database transactions for lease creation
+
+#### Validation:
+- Required field validation in form
+- File extension validation
+- File type mapping (e.g., .doc allowed for Business Permit)
+- Monthly rent validation (positive number)
+- Email format validation for notifications
+
+#### Error Handling:
+- Try-catch blocks for file uploads
+- User-friendly error messages
+- Flash messages for success/failure
+- Graceful fallback if upload directory doesn't exist (auto-creates)
+- Database transaction rollback on lease creation failure
+
+#### Browser Compatibility:
+- Modern form elements with file input
+- Modal with CSS and JavaScript (ES6)
+- Responsive table layout
+- File preview for image documents
+
+#### Testing Checklist:
+- [x] Tenant can submit stall application with all required documents
+- [x] Business logo optional upload works
+- [x] File type validation working for all document types
+- [x] Admin application list displays all applications
+- [x] Filter by status (pending, approved, rejected) works
+- [x] Modal displays complete application details
+- [x] Document preview shows images or download links
+- [x] Approve action changes status to APPROVED
+- [x] Reject action with confirmation changes status to REJECTED
+- [x] Stall assignment form appears after approval
+- [x] Stall dropdown filtered by type
+- [x] Lease start date input field appears in assignment form
+- [x] Monthly rent validation works
+- [x] Assign stall creates lease with selected lease start date
+- [x] First due date calculated from selected lease start date
+- [x] Stall status updated to occupied
+- [x] Notifications sent to both tenant and admin
+- [x] Lease start date displayed in tenant notification
+- [x] Flash messages display on tenant stalls page
+- [x] Application ID generated and displayed
+
+#### Database Tables Used:
+- `stall_applications` - Stores all application data
+- `stalls` - For available stall selection and status updates
+- `leases` - Created when stall assigned
+- `dues` - First due date created
+- `arrears` - Initialized for lease
+- `users` - Tenant data retrieval
+- `notifications` - Approval/rejection and assignment notifications
+
+---
+
+### 2. **Stalls Management & Display Enhancement**
 - **Version**: 1.3.0
 - **Status**: Implemented & Tested
 - **Description**: Complete redesign of stalls interface for admin and tenant with improved picture handling and table views
@@ -324,6 +528,7 @@ $reset_link = "https://yourdomain.com/public/reset_password.php?token=" . urlenc
 
 | Version | Date       | Major Changes | Status |
 |---------|------------|---------------|--------|
+| 1.4.0   | 2026-02-11 | Stall Application System & Admin Approval Workflow | Implemented |
 | 1.3.1   | 2026-01-22 | SendGrid API Integration with PHPMailer Fallback | Implemented |
 | 1.3.0   | 2026-01-18 | Stalls Management & Display Enhancement | Implemented |
 | 1.2.0   | 2026-01-15 | 2FA & Trusted Device System | Implemented |
@@ -403,5 +608,5 @@ For issues or feature requests, please contact the development team or open an i
 
 ---
 
-**Last Updated**: January 22, 2026  
+**Last Updated**: February 11, 2026  
 **Project**: RentFlow - Property Rental Management System

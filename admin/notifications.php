@@ -189,7 +189,7 @@ function openNotificationFromEl(el) {
   
   // Check if this is a stall application notification
   if (title === 'New stall application') {
-    openApplicationModal(message);
+    alert('New stall application received. Please visit the Applications page to review and process it.');
   } else {
     openNotificationModal(id, title, message);
   }

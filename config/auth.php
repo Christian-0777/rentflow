@@ -7,20 +7,33 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 function require_role($role) {
+  $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+  
   if (!isset($_SESSION['user'])) {
+    if ($isAjax) {
+      http_response_code(401);
+      echo json_encode(['error' => 'Unauthorized']);
+      exit;
+    }
     header('Location: /admin/login.php');
     exit;
   }
+  
+  $authorized = false;
   if (is_array($role)) {
-    if (!in_array($_SESSION['user']['role'], $role)) {
-      header('Location: /admin/login.php');
-      exit;
-    }
+    $authorized = in_array($_SESSION['user']['role'], $role);
   } else {
-    if ($_SESSION['user']['role'] !== $role) {
-      header('Location: /admin/login.php');
+    $authorized = $_SESSION['user']['role'] === $role;
+  }
+  
+  if (!$authorized) {
+    if ($isAjax) {
+      http_response_code(403);
+      echo json_encode(['error' => 'Forbidden']);
       exit;
     }
+    header('Location: /admin/login.php');
+    exit;
   }
 }
 

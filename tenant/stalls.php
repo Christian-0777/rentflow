@@ -117,6 +117,9 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
   <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
     <i class="material-icons">storefront</i>
     Available Stalls
+    <button class="btn btn-primary" type="button" onclick="openApplyModal()" style="margin-left: auto;">
+      <i class="material-icons" style="font-size: 18px; vertical-align: middle;">check_circle</i> Apply Now
+    </button>
   </h2>
   
   <div class="table-responsive">
@@ -127,7 +130,6 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
           <th>Type</th>
           <th>Location</th>
           <th>Preview</th>
-          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -143,11 +145,6 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
                 <span style="color: var(--secondary);">No Photo</span>
               <?php endif; ?>
             </td>
-            <td>
-              <button class="btn btn-primary btn-small" type="button" onclick="openApplyModal('<?= htmlspecialchars($s['stall_no']) ?>', '<?= htmlspecialchars($s['type']) ?>')">
-                <i class="material-icons" style="font-size: 16px;">add</i> Apply
-              </button>
-            </td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -161,13 +158,26 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
     <button class="modal-close" onclick="closeModal()">&times;</button>
     <h2 style="margin-bottom: 16px;">Apply for Stall</h2>
     
-    <form id="applyForm" action="/rentflow/public/api/stalls_apply.php" method="post" enctype="multipart/form-data">
-      <input type="hidden" id="modalStallNo" name="stall_no" value="">
-      <input type="hidden" id="modalType" name="type" value="">
+    <form id="applyForm" action="/rentflow/api/stalls_apply.php" method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Stall Type *</label>
+        <select name="type" required>
+          <option value="">-- Select a stall type --</option>
+          <option value="wet">Wet</option>
+          <option value="dry">Dry</option>
+          <option value="apparel">Apparel</option>
+        </select>
+      </div>
 
       <div class="form-group">
         <label>Business Name *</label>
         <input type="text" name="business_name" required>
+      </div>
+
+      <div class="form-group">
+        <label>Business Logo (Optional)</label>
+        <input type="file" name="business_logo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+        <small style="color: var(--secondary);">Accepted formats: pdf, png, jpg, doc, docx</small>
       </div>
 
       <div class="form-group">
@@ -177,20 +187,20 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
 
       <div class="form-group">
         <label>Business Permit *</label>
-        <input type="file" name="permit" accept=".txt,.doc,.pdf" required>
-        <small style="color: var(--secondary);">Accepted formats: txt, doc, pdf</small>
+        <input type="file" name="business_permit" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+        <small style="color: var(--secondary);">Accepted formats: pdf, png, jpg, doc, docx</small>
       </div>
 
       <div class="form-group">
         <label>Valid ID *</label>
-        <input type="file" name="valid_id" accept=".png,.jpeg,.webp" required>
-        <small style="color: var(--secondary);">Accepted formats: png, jpg, webp</small>
+        <input type="file" name="valid_id" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+        <small style="color: var(--secondary);">Accepted formats: pdf, png, jpg, doc, docx</small>
       </div>
 
       <div class="form-group">
-        <label>Signature *</label>
-        <input type="file" name="signature" accept=".pdf,.doc" required>
-        <small style="color: var(--secondary);">Accepted formats: pdf, doc</small>
+        <label>Digital Signature *</label>
+        <input type="file" name="digital_signature" accept=".pdf,.png,.jpg,.jpeg" required>
+        <small style="color: var(--secondary);">Accepted formats: pdf, png, jpg</small>
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
@@ -212,9 +222,7 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function openApplyModal(stallNo, type) {
-  document.getElementById('modalStallNo').value = stallNo;
-  document.getElementById('modalType').value = type;
+function openApplyModal() {
   document.getElementById('applyModal').classList.add('show');
 }
 

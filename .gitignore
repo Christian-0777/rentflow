@@ -41,7 +41,7 @@ package-lock.json
 
 # Database files
 *.sql
-!sql/seed.sql
+!sql/rentflow.sql
 
 # Temporary files
 tmp/

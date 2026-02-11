@@ -217,6 +217,11 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
 
   <section class="grid">
     <div class="card">
+      <h3>Stall Applications</h3>
+      <a href="applications.php" class="btn" style="display: inline-block;">View Applications</a>
+    </div>
+
+    <div class="card">
       <h3>Add stall</h3>
       <button class="btn" onclick="openAddStallModal()">Add New Stall</button>
     </div>

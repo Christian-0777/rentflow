@@ -8,6 +8,35 @@ require_once __DIR__.'/../config/auth.php';
 // ✅ Allow admin and treasury
 require_role(['admin', 'treasury']);
 
+// ✅ Automatically add overdue payments (>15 days) to arrears
+$overdueCheck = $pdo->query("
+    SELECT l.id as lease_id, d.due_date, d.amount_due
+    FROM dues d
+    JOIN leases l ON d.lease_id = l.id
+    WHERE d.paid = 0 
+    AND d.due_date < DATE_SUB(CURDATE(), INTERVAL 15 DAY)
+    AND NOT EXISTS (
+        SELECT 1 FROM arrears a 
+        WHERE a.lease_id = l.id 
+        AND DATE(a.last_updated) = CURDATE()
+    )
+")->fetchAll(PDO::FETCH_ASSOC);
+
+// Add overdue amounts to arrears
+foreach ($overdueCheck as $overdue) {
+    $existing = $pdo->prepare("SELECT total_arrears FROM arrears WHERE lease_id = ?");
+    $existing->execute([$overdue['lease_id']]);
+    $arr = $existing->fetch();
+    
+    if ($arr) {
+        $pdo->prepare("UPDATE arrears SET total_arrears = total_arrears + ?, last_updated = NOW() WHERE lease_id = ?")
+            ->execute([$overdue['amount_due'], $overdue['lease_id']]);
+    } else {
+        $pdo->prepare("INSERT INTO arrears (lease_id, total_arrears, last_updated) VALUES (?, ?, NOW())")
+            ->execute([$overdue['lease_id'], $overdue['amount_due']]);
+    }
+}
+
 // Handle mark payment status and next payment
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_next_payment'])) {
     $lease_id = $_POST['lease_id'];
@@ -45,13 +74,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_next_payment']
             }
         }
     } elseif ($action === 'notpaid') {
-        // Get the last payment amount
-        $last_payment = $pdo->prepare("SELECT amount FROM payments WHERE lease_id = ? ORDER BY payment_date DESC LIMIT 1");
-        $last_payment->execute([$lease_id]);
-        $lp = $last_payment->fetch();
-        if ($lp) {
-            // Add the previous payment amount to arrears
-            $pdo->prepare("INSERT INTO arrears (lease_id, total_arrears, last_updated) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE total_arrears = total_arrears + VALUES(total_arrears), last_updated = NOW()")->execute([$lease_id, $lp['amount']]);
+        // Get the current unpaid due amount
+        $current_due = $pdo->prepare("SELECT amount_due FROM dues WHERE lease_id = ? AND paid = 0 ORDER BY due_date ASC LIMIT 1");
+        $current_due->execute([$lease_id]);
+        $cd = $current_due->fetch();
+        if ($cd && $cd['amount_due'] > 0) {
+            // Add the current due amount to arrears
+            $pdo->prepare("INSERT INTO arrears (lease_id, total_arrears, last_updated) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE total_arrears = total_arrears + VALUES(total_arrears), last_updated = NOW()")->execute([$lease_id, $cd['amount_due']]);
         }
         // Insert payment record with not paid
         $pdo->prepare("INSERT INTO payments (lease_id, amount, payment_date, method, remarks) VALUES (?, 0, CURDATE(), 'manual', 'Not Paid')")->execute([$lease_id]);
@@ -258,7 +287,11 @@ function showArrearsHistory(leaseId, previousArrears) {
   document.getElementById('arrearsHistoryContent').innerHTML = '<p>Loading...</p>';
   document.getElementById('arrearsHistoryModal').style.display = 'block';
 
-  fetch('/rentflow/api/arrears_history.php?lease_id=' + leaseId)
+  fetch('/rentflow/api/arrears_history.php?lease_id=' + leaseId, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
     .then(response => response.json())
     .then(data => {
       if (data.error) {
@@ -308,6 +341,7 @@ function payArrear(leaseId, dueDate, amount) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: 'lease_id=' + leaseId + '&due_date=' + encodeURIComponent(dueDate) + '&amount_paid=' + encodeURIComponent(amountPaid)
     })
