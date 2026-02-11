@@ -34,6 +34,17 @@ $arrears = $pdo->prepare("SELECT total_arrears FROM arrears WHERE lease_id=?");
 $arrears->execute([$leaseId]);
 $ar = $arrears->fetchColumn();
 
+// Fetch latest notification
+$latestNotif = $pdo->prepare("
+    SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) AS sender_name
+    FROM notifications n
+    JOIN users u ON n.sender_id=u.id
+    WHERE n.receiver_id=?
+    ORDER BY n.created_at DESC LIMIT 1
+");
+$latestNotif->execute([$tenantId]);
+$notification = $latestNotif->fetch(PDO::FETCH_ASSOC);
+
 // Fetch arrears history: penalties and unpaid dues
 $history = $pdo->prepare("
     SELECT applied_on as date, penalty_amount as amount, 'Penalty Applied' as type, 'Applied' as status
@@ -90,6 +101,25 @@ usort($allHistory, function($a, $b) {
     <h1>Welcome back, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>
     <p>Here's an overview of your account</p>
   </div>
+
+  <?php if ($notification): ?>
+    <div class="alert alert-info" style="border-left: 4px solid #0d6efd;">
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <i class="material-icons" style="color: #0d6efd; margin-top: 2px;">notifications_active</i>
+        <div style="flex: 1;">
+          <?php if ($notification['title']): ?>
+            <strong><?= htmlspecialchars($notification['title']) ?></strong><br>
+          <?php endif; ?>
+          <p style="margin: 4px 0 0 0; font-size: 14px;"><?= htmlspecialchars($notification['message']) ?></p>
+          <small style="color: #6c757d;">
+            <?= htmlspecialchars($notification['sender_name'] ?? 'System') ?> • 
+            <?= htmlspecialchars(date('M d, Y h:i A', strtotime($notification['created_at']))) ?>
+          </small>
+        </div>
+      </div>
+      <button class="btn-close" onclick="this.parentElement.parentElement.style.display='none'"></button>
+    </div>
+  <?php endif; ?>
 
   <?php if (!empty($_SESSION['flash_success'])): ?>
     <div class="alert alert-success">
