@@ -5,8 +5,8 @@
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
 
-// ✅ Allow admin and treasury
-require_role(['admin', 'treasury']);
+// ✅ Allow admin
+require_role('admin');
 
 $to = (int)($_GET['to'] ?? 0);
 $threads = $pdo->query("
@@ -189,7 +189,7 @@ function openNotificationFromEl(el) {
   
   // Check if this is a stall application notification
   if (title === 'New stall application') {
-    alert('New stall application received. Please visit the Applications page to review and process it.');
+    window.location.href = 'applications.php';
   } else {
     openNotificationModal(id, title, message);
   }

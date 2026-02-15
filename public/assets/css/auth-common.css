@@ -14,8 +14,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Layout for Authentication Pages */
 body.public main.content,
-body.admin main.content,
-body.treasury main.content {
+body.admin main.content {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -26,8 +25,7 @@ body.treasury main.content {
 
 /* Form Layout */
 body.public main.content form,
-body.admin main.content form,
-body.treasury main.content form {
+body.admin main.content form {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -35,8 +33,7 @@ body.treasury main.content form {
 
 /* Headings */
 body.public main.content h1,
-body.admin main.content h1,
-body.treasury main.content h1 {
+body.admin main.content h1 {
   text-align: center;
   margin-bottom: 10px;
   color: #0B3C5D;
@@ -44,8 +41,7 @@ body.treasury main.content h1 {
 }
 
 body.public main.content h2,
-body.admin main.content h2,
-body.treasury main.content h2 {
+body.admin main.content h2 {
   text-align: center;
   color: #0B3C5D;
   font-size: 20px;
@@ -54,18 +50,15 @@ body.treasury main.content h2 {
 
 /* Alerts */
 body.public main.content .alert,
-body.admin main.content .alert,
-body.treasury main.content .alert {
+body.admin main.content .alert {
   margin-bottom: 20px;
 }
 
 /* Form Inputs & Selects */
 body.public main.content input,
 body.admin main.content input,
-body.treasury main.content input,
 body.public main.content select,
-body.admin main.content select,
-body.treasury main.content select {
+body.admin main.content select {
   padding: 12px;
   margin-bottom: 15px;
   border: 1px solid #ddd;
@@ -78,10 +71,8 @@ body.treasury main.content select {
 /* Form Input Focus State */
 body.public main.content input:focus,
 body.admin main.content input:focus,
-body.treasury main.content input:focus,
 body.public main.content select:focus,
-body.admin main.content select:focus,
-body.treasury main.content select:focus {
+body.admin main.content select:focus {
   outline: none;
   border-color: #0B3C5D;
   box-shadow: 0 0 6px rgba(11, 60, 93, 0.2);
@@ -89,8 +80,7 @@ body.treasury main.content select:focus {
 
 /* Buttons */
 body.public main.content button,
-body.admin main.content button,
-body.treasury main.content button {
+body.admin main.content button {
   padding: 12px 20px;
   margin-top: 10px;
   background-color: #0B3C5D;
@@ -106,15 +96,13 @@ body.treasury main.content button {
 
 /* Button Hover State */
 body.public main.content button:hover,
-body.admin main.content button:hover,
-body.treasury main.content button:hover {
+body.admin main.content button:hover {
   background-color: #083051;
 }
 
 /* Paragraphs */
 body.public main.content p,
-body.admin main.content p,
-body.treasury main.content p {
+body.admin main.content p {
   text-align: center;
   margin-top: 20px;
   font-size: 14px;
@@ -123,16 +111,14 @@ body.treasury main.content p {
 
 /* Links in Paragraphs */
 body.public main.content p a,
-body.admin main.content p a,
-body.treasury main.content p a {
+body.admin main.content p a {
   color: #0B3C5D;
   text-decoration: none;
   font-weight: 500;
 }
 
 body.public main.content p a:hover,
-body.admin main.content p a:hover,
-body.treasury main.content p a:hover {
+body.admin main.content p a:hover {
   text-decoration: underline;
 }
 
@@ -150,23 +136,20 @@ main.content > .card-container {
 /* Mobile Responsive for Auth Pages */
 @media (max-width: 768px) {
   body.public main.content,
-  body.admin main.content,
-  body.treasury main.content {
+  body.admin main.content {
     min-height: auto;
     padding-top: 70px;
     padding-bottom: 20px;
   }
 
   body.public main.content h1,
-  body.admin main.content h1,
-  body.treasury main.content h1 {
+  body.admin main.content h1 {
     font-size: 24px;
     margin-bottom: 15px;
   }
 
   body.public main.content h2,
-  body.admin main.content h2,
-  body.treasury main.content h2 {
+  body.admin main.content h2 {
     font-size: 18px;
   }
 
@@ -180,25 +163,21 @@ main.content > .card-container {
 
   body.public main.content input,
   body.admin main.content input,
-  body.treasury main.content input,
   body.public main.content select,
-  body.admin main.content select,
-  body.treasury main.content select {
+  body.admin main.content select {
     font-size: 16px;
     padding: 14px;
     margin-bottom: 12px;
   }
 
   body.public main.content button,
-  body.admin main.content button,
-  body.treasury main.content button {
+  body.admin main.content button {
     padding: 14px 16px;
     font-size: 16px;
   }
 
   body.public main.content p,
-  body.admin main.content p,
-  body.treasury main.content p {
+  body.admin main.content p {
     font-size: 13px;
     margin-top: 15px;
   }
@@ -206,14 +185,12 @@ main.content > .card-container {
 
 @media (max-width: 480px) {
   body.public main.content,
-  body.admin main.content,
-  body.treasury main.content {
+  body.admin main.content {
     padding-top: 65px;
   }
 
   body.public main.content h1,
-  body.admin main.content h1,
-  body.treasury main.content h1 {
+  body.admin main.content h1 {
     font-size: 20px;
   }
 
@@ -225,10 +202,8 @@ main.content > .card-container {
 
   body.public main.content input,
   body.admin main.content input,
-  body.treasury main.content input,
   body.public main.content select,
-  body.admin main.content select,
-  body.treasury main.content select {
+  body.admin main.content select {
     font-size: 16px;
     padding: 12px;
   }

@@ -87,10 +87,6 @@ rentflow/
 │   ├── profile.php
 │   ├── stalls.php
 │   └── support.php
-├── treasury/
-│   ├── adjustments.php
-│   ├── dashboard.php
-│   └── login.php
 ├── uploads/
 │   └── stalls/
 ├── vendor/
@@ -125,6 +121,6 @@ rentflow/
 | `public/` | Public-facing pages and assets |
 | `sql/` | Database schemas and seed data |
 | `tenant/` | Tenant-specific pages and features |
-| `treasury/` | Treasury/finance management pages |
+<!-- Treasury role removed; treasury/ directory deleted -->
 | `uploads/` | User-uploaded files storage |
 | `vendor/` | Composer dependencies (PHPMailer, SendGrid, etc.) |

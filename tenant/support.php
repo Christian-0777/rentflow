@@ -1,6 +1,6 @@
 <?php
 // tenant/support.php
-// Tenant support chat interface (messages go to admin and treasury)
+// Tenant support chat interface (messages go to admin)
 
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
@@ -29,12 +29,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   if ($adminId) {
     $pdo->prepare("INSERT INTO notifications (sender_id, receiver_id, type, title, message) VALUES (?, ?, 'chat', 'Support', ?)")
         ->execute([$tenantId, $adminId, $message]);
-  }
-  // Send to treasury (optional)
-  $treasuryId = $pdo->query("SELECT id FROM users WHERE role='treasury' LIMIT 1")->fetchColumn();
-  if ($treasuryId) {
-    $pdo->prepare("INSERT INTO notifications (sender_id, receiver_id, type, title, message) VALUES (?, ?, 'chat', 'Support', ?)")
-        ->execute([$tenantId, $treasuryId, $message]);
   }
   $msg = 'Message sent to support.';
 }

@@ -20,7 +20,7 @@ USE rentflow;
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tenant_id VARCHAR(4) UNIQUE DEFAULT NULL,
-  role ENUM('tenant','admin','treasury') NOT NULL,
+  role ENUM('tenant','admin') NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE notifications (
 
 CREATE TABLE auth_codes (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  role ENUM('admin','treasury') NOT NULL,
+  role ENUM('admin') NOT NULL,
   code1 VARCHAR(16) NOT NULL,
   code2 VARCHAR(16) NOT NULL,
   code3 VARCHAR(16) NOT NULL,

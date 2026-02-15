@@ -7,7 +7,7 @@ require_once __DIR__ . '/env.php';
 
 define('ROLE_TENANT', 'tenant');
 define('ROLE_ADMIN', 'admin');
-define('ROLE_TREASURY', 'treasury');
+// Treasury role removed from project
 
 define('STALL_TYPES', ['wet','dry','apparel']);
 define('LEASE_STATUSES', ['active','inactive','lease_ended']);

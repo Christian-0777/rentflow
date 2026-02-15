@@ -1,6 +1,6 @@
 <?php
 // admin/contact.php
-// Contact service form for admin to reach support (stored as notification to treasury/admin)
+// Contact service form for admin to reach support (stored as notification to admin/service)
 
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
@@ -24,9 +24,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     }
   }
   
-  // Send to treasury (if exists) or fallback to admin self
-  $treasuryId = $pdo->query("SELECT id FROM users WHERE role='treasury' LIMIT 1")->fetchColumn();
-  $receiver = $treasuryId ?: $_SESSION['user']['id'];
+  // Send to service/admin (treasury removed)
+  $receiver = $_SESSION['user']['id'];
   $pdo->prepare("INSERT INTO notifications (sender_id, receiver_id, type, title, message) VALUES (?,?, 'system', ?, ?)")
       ->execute([$_SESSION['user']['id'], $receiver, $subject, $message]);
   $msg = 'Message sent to service.';

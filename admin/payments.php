@@ -5,8 +5,8 @@
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
 
-// ✅ Allow admin and treasury
-require_role(['admin', 'treasury']);
+// ✅ Allow admin
+require_role('admin');
 
 // ✅ Automatically add overdue payments (>15 days) to arrears
 $overdueCheck = $pdo->query("

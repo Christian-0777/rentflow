@@ -108,4 +108,4 @@ To test the feature:
 - Reset tokens are cleared after successful password reset
 - Failed reset attempts leave the token active (can retry)
 - Expired tokens show an error message with option to request new link
-- Admin and Treasury roles are not affected by this feature (tenants only)
+- Admin role is not affected by this feature (tenants only)
