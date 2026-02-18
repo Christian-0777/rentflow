@@ -1,0 +1,768 @@
+/* ============================================================
+   Payments & Arrears Page - Specific Styles
+   ============================================================ */
+
+/* Page Header */
+.page-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #E6F2F8;
+}
+
+.page-header h1 {
+    margin: 0 0 10px 0;
+    color: #0B3C5D;
+    font-size: 32px;
+}
+
+.page-header .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Alerts */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    animation: slideDown 0.3s ease;
+}
+
+.alert i {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.alert.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.close-alert {
+    margin-left: auto;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.close-alert:hover {
+    opacity: 1;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tabs Container */
+.tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #ddd;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    margin-bottom: -2px;
+}
+
+.tab-btn i {
+    font-size: 20px;
+}
+
+.tab-btn:hover {
+    color: #0B3C5D;
+    background: rgba(11, 60, 93, 0.05);
+}
+
+.tab-btn.active {
+    color: #0B3C5D;
+    border-bottom-color: #0B3C5D;
+}
+
+.tab-count {
+    display: inline-block;
+    background: #0B3C5D;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    min-width: 24px;
+    text-align: center;
+}
+
+.tab-btn.active .tab-count {
+    background: #F2B705;
+    color: #000;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 8px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Tables */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #efefef;
+}
+
+.table th {
+    background-color: #E6F2F8;
+    font-weight: 600;
+    color: #0B3C5D;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f5f9fc;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Table Cell Styles */
+.stall-cell {
+    font-weight: 600;
+    color: #0B3C5D;
+}
+
+.tenant-cell {
+    min-width: 180px;
+}
+
+.tenant-link {
+    color: #0B3C5D;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.tenant-link:hover {
+    color: #F2B705;
+    text-decoration: underline;
+}
+
+.tenant-code {
+    display: block;
+    color: #999;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.business-cell {
+    color: #555;
+}
+
+.previous-payment {
+    min-width: 140px;
+}
+
+.previous-payment .date {
+    display: block;
+    color: #0B3C5D;
+    font-weight: 500;
+}
+
+.previous-payment .amount {
+    display: block;
+    color: #666;
+    font-size: 12px;
+}
+
+.no-data {
+    color: #ccc;
+}
+
+.status-cell {
+    min-width: 110px;
+}
+
+.next-payment-date {
+    color: #555;
+    min-width: 100px;
+}
+
+.next-amount {
+    color: #0B3C5D;
+    font-weight: 500;
+    min-width: 90px;
+}
+
+.remarks-cell {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.total-arrears {
+    min-width: 120px;
+}
+
+.amount-total {
+    color: #8B1E1E;
+    font-size: 16px;
+}
+
+.previous-arrears {
+    min-width: 130px;
+}
+
+.arrears-history-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0B3C5D;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.arrears-history-link:hover {
+    color: #F2B705;
+    text-decoration: underline;
+}
+
+.arrears-history-link i {
+    font-size: 16px;
+}
+
+.triggered-date {
+    color: #666;
+    min-width: 100px;
+}
+
+.trigger-reason {
+    min-width: 140px;
+}
+
+.badge-reason {
+    background: #f0f0f0;
+    color: #333;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-overdue {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Actions Cell */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-width: 180px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-decoration: none;
+    background-color: #0B3C5D;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background-color: #083051;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.btn i {
+    font-size: 16px;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.btn-message {
+    background-color: #4CAF50;
+}
+
+.btn-message:hover {
+    background-color: #45a049;
+}
+
+.action-dropdown {
+    flex: 1;
+    min-width: 100px;
+}
+
+.action-select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.action-select:focus {
+    outline: none;
+    border-color: #0B3C5D;
+    box-shadow: 0 0 0 2px rgba(11, 60, 93, 0.1);
+}
+
+/* Modals */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.2s ease;
+}
+
+.modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+.modal-content.modal-large {
+    max-width: 700px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #efefef;
+    background: #f9f9f9;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #0B3C5D;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #efefef;
+    color: #333;
+}
+
+/* Form Styles */
+.payment-form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #0B3C5D;
+    box-shadow: 0 0 0 2px rgba(11, 60, 93, 0.1);
+}
+
+.form-group input[type="number"] {
+    text-align: right;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid #efefef;
+}
+
+.btn-primary {
+    flex: 1;
+    background-color: #0B3C5D;
+    padding: 10px 16px;
+}
+
+.btn-primary:hover {
+    background-color: #083051;
+}
+
+.btn-secondary {
+    flex: 1;
+    background-color: #999;
+    padding: 10px 16px;
+}
+
+.btn-secondary:hover {
+    background-color: #777;
+}
+
+/* Arrears History Content */
+.arrears-history-content {
+    padding: 20px;
+}
+
+.arrears-history-content p {
+    margin: 10px 0;
+    color: #333;
+}
+
+.arrears-history-content strong {
+    color: #0B3C5D;
+}
+
+.arrears-history-content .table {
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .table {
+        font-size: 13px;
+    }
+
+    .table th,
+    .table td {
+        padding: 12px 12px;
+    }
+
+    .actions-cell {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .action-dropdown {
+        min-width: auto;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .tabs-container {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .tab-count {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    .table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+    }
+
+    .table thead {
+        display: none;
+    }
+
+    .table tbody,
+    .table tr,
+    .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table tr {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid #efefef;
+    }
+
+    .table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 16px;
+        font-weight: 600;
+        color: #0B3C5D;
+        text-align: left;
+    }
+
+    .table td:last-child {
+        border-bottom: none;
+    }
+
+    .actions-cell {
+        text-align: left;
+        padding-left: 16px !important;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 100%;
+        max-height: 90vh;
+    }
+
+    .modal-content.modal-large {
+        max-width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-secondary {
+        flex: 1;
+        width: 100%;
+    }
+
+    .empty-state {
+        padding: 40px 20px;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+    }
+
+    .empty-state p {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 20px;
+    }
+
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .table {
+        font-size: 11px;
+    }
+
+    .table td {
+        padding-left: 45%;
+    }
+
+    .alert {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .alert i {
+        font-size: 18px;
+    }
+
+    .close-alert {
+        margin-left: 0;
+    }
+}
