@@ -1,6 +1,7 @@
 <?php
 // config/auth.php
-// Session start, role checks, admin/treasury 3-code login
+// Session start, role checks, admin/tenant only
+// Note: Treasury role has been removed from the application
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

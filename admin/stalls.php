@@ -171,6 +171,7 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
       <li><a href="payments.php"><i class="material-icons">payments</i>Payments</a></li>
       <li><a href="reports.php"><i class="material-icons">assessment</i>Reports</a></li>
       <li><a href="stalls.php"><i class="material-icons">store</i>Stalls</a></li>
+      <li><a href="messages.php" title="Messages"><i class="material-icons">mail</i>Messages</a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i>Notifications</a></li>
       <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i>Account</a></li>
       <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i>Contact</a></li>

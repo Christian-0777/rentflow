@@ -1,27 +1,9 @@
 <?php
 // treasury/login.php
-// One-click Treasury login (no credentials)
+// Treasury role has been removed - redirecting to admin login
 
-require_once __DIR__.'/../config/db.php';
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-$msg = '';
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-  // Fetch the first treasury user from DB
-  $stmt = $pdo->query("SELECT * FROM users WHERE role='treasury' LIMIT 1");
-  $user = $stmt->fetch();
-
-  if ($user) {
-    $_SESSION['user'] = $user;
-    // 👇 Adjust path depending on where dashboard.php is located
-    header('Location: /rentflow/treasury/dashboard.php');
-    exit;
-  } else {
-    $msg = 'No treasury account found.';
-  }
-}
+header('Location: /admin/login.php');
+exit;
 ?>
 <!DOCTYPE html>
 <html lang="en">

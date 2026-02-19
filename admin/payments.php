@@ -5,8 +5,8 @@
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
 
-// ✅ Allow admin and treasury
-require_role(['admin', 'treasury']);
+// ✅ Admin access only (treasury role removed)
+require_role('admin');
 
 // ============================================================
 // HANDLE PAYMENT ACTIONS (Mark as Paid, Partial, Not Paid)
@@ -56,6 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
                 INSERT INTO payments (lease_id, amount, payment_date, method, remarks) 
                 VALUES (?, ?, CURDATE(), 'partial', 'Partial Payment')
             ")->execute([$lease_id, $amount_paid]);
+            
+            // Mark original due as paid (remainder is tracked separately as arrear entry)
+            $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
             
             // Add remaining to arrears with arrear_entries tracking
             $remaining = $due_record['amount_due'] - $amount_paid;
@@ -275,13 +278,14 @@ $arrears_rows = $pdo->query("
 <body class="admin">
 <header class="header">
     <h1 class="site-title">RentFlow</h1>
-    <nav class="navigation">
+      <nav class="navigation">
         <ul>
             <li><a href="dashboard.php"><i class="material-icons">dashboard</i>Dashboard</a></li>
             <li><a href="tenants.php"><i class="material-icons">people</i>Tenants</a></li>
-            <li><a href="payments.php" class="active"><i class="material-icons">payments</i>Payments</a></li>
+            <li><a href="payments.php"><i class="material-icons">payments</i>Payments</a></li>
             <li><a href="reports.php"><i class="material-icons">assessment</i>Reports</a></li>
             <li><a href="stalls.php"><i class="material-icons">store</i>Stalls</a></li>
+            <li><a href="messages.php" title="Messages"><i class="material-icons">mail</i>Messages</a></li>
             <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i>Notifications</a></li>
             <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i>Account</a></li>
             <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i>Contact</a></li>

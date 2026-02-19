@@ -5,8 +5,8 @@
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
 
-// ✅ Allow admin and treasury
-require_role(['admin', 'treasury']);
+// ✅ Admin access only (treasury role removed)
+require_role('admin');
 
 $to = (int)($_GET['to'] ?? 0);
 $threads = $pdo->query("
@@ -55,6 +55,7 @@ if ($to) {
       <li><a href="payments.php"><i class="material-icons">payments</i>Payments</a></li>
       <li><a href="reports.php"><i class="material-icons">assessment</i>Reports</a></li>
       <li><a href="stalls.php"><i class="material-icons">store</i>Stalls</a></li>
+      <li><a href="messages.php" title="Messages"><i class="material-icons">mail</i>Messages</a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i>Notifications</a></li>
       <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i>Account</a></li>
       <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i>Contact</a></li>
@@ -85,30 +86,12 @@ if ($to) {
     </div>
 
     <div class="card">
-      <h3>Chat with tenant</h3>
-      <form action="/api/chat_send.php" method="post">
-        <input type="hidden" name="receiver_id" value="<?= $to ?>">
-        <textarea name="message" placeholder="Type a message..." required></textarea>
-        <button class="btn">Send</button>
-      </form>
-      <div class="chat">
-        <?php foreach ($chat as $c): 
-          // Parse message for attachments
-          $message = $c['message'];
-          $attachmentLink = '';
-          if (preg_match('/Attachment: (\/rentflow\/uploads\/support\/[^\s]+)/', $message, $matches)) {
-            $attachmentPath = $matches[1];
-            $message = preg_replace('/\n\nAttachment: [^\s]+/', '', $message);
-            $attachmentLink = '<br><strong>Attachment:</strong> <a href="' . htmlspecialchars($attachmentPath) . '" target="_blank">View Image</a>';
-          }
-        ?>
-          <div class="chat-item">
-            <strong><?= htmlspecialchars($c['sender_name']) ?>:</strong>
-            <span><?= nl2br(htmlspecialchars($message)) . $attachmentLink ?></span>
-            <small><?= htmlspecialchars($c['created_at']) ?></small>
-          </div>
-        <?php endforeach; ?>
-      </div>
+      <h3>💬 Messaging</h3>
+      <p style="margin: 0; color: #666;">Tenant messaging has been moved to a dedicated interface for better conversation management.</p>
+      <a href="messages.php" class="btn" style="margin-top: 12px; display: inline-block;">
+        <i class="material-icons" style="vertical-align: middle; font-size: 18px;">mail</i>
+        Go to Messages
+      </a>
     </div>
   </section>
 </main>

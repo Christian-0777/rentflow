@@ -102,9 +102,134 @@ $user = $info->fetch();
       </a>
     </div>
   </div>
+
+  <!-- Chat with Admin Button -->
+  <div class="tenant-card" style="margin-top: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+    <i class="material-icons" style="font-size: 48px; display: block; margin-bottom: 12px;">chat</i>
+    <h3 style="margin-bottom: 12px; color: white;">Need Help?</h3>
+    <p style="margin-bottom: 16px; color: rgba(255,255,255,0.9);">Send a message to our support team for any questions or concerns.</p>
+    <button class="btn" style="background: white; color: #667eea; font-weight: 600; border: none;" onclick="openMessageModal()">
+      <i class="material-icons" style="font-size: 18px;">mail</i> Chat with Admin
+    </button>
+  </div>
 </main>
 
+<!-- Chat Modal -->
+<div id="messageModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div class="modal-content" style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Send Message to Admin</h2>
+      <button style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;" onclick="closeMessageModal()">&times;</button>
+    </div>
+
+    <form id="messageForm" method="post" action="/rentflow/api/send_message.php">
+      <input type="hidden" name="receiver_id" value="">
+      <input type="hidden" name="from_tenant" value="1">
+
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          Email (Optional)
+        </label>
+        <input 
+          type="email" 
+          name="sender_email" 
+          placeholder="your.email@example.com"
+          style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+        <small style="display: block; margin-top: 4px; color: #666;">If provided, replies will be sent to this email</small>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          Message *
+        </label>
+        <textarea 
+          name="message" 
+          required
+          placeholder="Type your message here..."
+          style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 120px; box-sizing: border-box;"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button 
+          type="button" 
+          class="btn" 
+          style="background: #f0f0f0; color: #333; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;"
+          onclick="closeMessageModal()">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn" 
+          style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+          <i class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">send</i>Send
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Get admin ID
+  function getAdminId() {
+    const adminId = '<?php 
+      $adminStmt = $pdo->prepare("SELECT id FROM users WHERE role='admin' LIMIT 1");
+      $adminStmt->execute();
+      echo $adminStmt->fetchColumn(); 
+    ?>';
+    return adminId;
+  }
+
+  function openMessageModal() {
+    const adminId = getAdminId();
+    document.querySelector('#messageForm input[name="receiver_id"]').value = adminId;
+    document.getElementById('messageModal').style.display = 'flex';
+  }
+
+  function closeMessageModal() {
+    document.getElementById('messageModal').style.display = 'none';
+  }
+
+  // Close modal on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeMessageModal();
+    }
+  });
+
+  // Handle form submission
+  document.getElementById('messageForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.target;
+    
+    const formData = new FormData(form);
+    
+    fetch('/rentflow/api/send_message.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert('Message sent successfully! Our support team will reply shortly.');
+        closeMessageModal();
+        form.reset();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to send message'));
+      }
+    })
+    .catch(err => {
+      alert('Error: ' + err.message);
+    });
+  });
+
+  // Close modal when clicking outside
+  document.getElementById('messageModal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('messageModal')) {
+      closeMessageModal();
+    }
+  });
+</script>
 </body>
 </html>
  

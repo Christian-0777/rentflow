@@ -45,30 +45,7 @@ $latestNotif = $pdo->prepare("
 $latestNotif->execute([$tenantId]);
 $notification = $latestNotif->fetch(PDO::FETCH_ASSOC);
 
-// Fetch arrears history: penalties and unpaid dues
-$history = $pdo->prepare("
-    SELECT applied_on as date, penalty_amount as amount, 'Penalty Applied' as type, 'Applied' as status
-    FROM penalties
-    WHERE lease_id = ?
-    ORDER BY applied_on DESC
-");
-$history->execute([$leaseId]);
-$penalties = $history->fetchAll(PDO::FETCH_ASSOC);
 
-$unpaidDues = $pdo->prepare("
-    SELECT due_date as date, amount_due as amount, 'Unpaid Due' as type, 'Unpaid' as status
-    FROM dues
-    WHERE lease_id = ? AND paid = 0 AND due_date > (SELECT MIN(due_date) FROM dues WHERE lease_id = ? AND paid = 0)
-    ORDER BY due_date DESC
-");
-$unpaidDues->execute([$leaseId, $leaseId]);
-$dues = $unpaidDues->fetchAll(PDO::FETCH_ASSOC);
-
-// Combine and sort by date descending
-$allHistory = array_merge($penalties, $dues);
-usort($allHistory, function($a, $b) {
-    return strtotime($b['date']) - strtotime($a['date']);
-});
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -151,35 +128,7 @@ usort($allHistory, function($a, $b) {
     </div>
   </div>
 
-  <div class="tenant-card" style="margin-bottom: 24px;">
-    <h3>Arrears History</h3>
-    <?php if (empty($allHistory)): ?>
-      <p style="color: var(--secondary); margin: 0;">No arrears history available.</p>
-    <?php else: ?>
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Amount</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($allHistory as $item): ?>
-              <tr>
-                <td><?= htmlspecialchars(date('M d, Y', strtotime($item['date']))) ?></td>
-                <td><?= htmlspecialchars($item['type']) ?></td>
-                <td><strong>₱<?= number_format($item['amount'], 2) ?></strong></td>
-                <td><span class="badge <?= $item['status'] === 'Paid' ? 'badge-success' : 'badge-danger' ?>"><?= htmlspecialchars($item['status']) ?></span></td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    <?php endif; ?>
-  </div>
+
 
   <?php if (!($_SESSION['user']['confirmed'] ?? 0)): ?>
     <div class="alert alert-warning">

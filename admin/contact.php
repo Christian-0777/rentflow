@@ -1,6 +1,6 @@
 <?php
 // admin/contact.php
-// Contact service form for admin to reach support (stored as notification to treasury/admin)
+// Contact service form for admin to reach support (stored as notification to admin)
 
 require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../config/auth.php';
@@ -24,9 +24,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     }
   }
   
-  // Send to treasury (if exists) or fallback to admin self
-  $treasuryId = $pdo->query("SELECT id FROM users WHERE role='treasury' LIMIT 1")->fetchColumn();
-  $receiver = $treasuryId ?: $_SESSION['user']['id'];
+  // Send to admin (treasury role removed)
+  $receiver = $_SESSION['user']['id'];
   $pdo->prepare("INSERT INTO notifications (sender_id, receiver_id, type, title, message) VALUES (?,?, 'system', ?, ?)")
       ->execute([$_SESSION['user']['id'], $receiver, $subject, $message]);
   $msg = 'Message sent to service.';
@@ -54,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
       <li><a href="payments.php"><i class="material-icons">payments</i>Payments</a></li>
       <li><a href="reports.php"><i class="material-icons">assessment</i>Reports</a></li>
       <li><a href="stalls.php"><i class="material-icons">store</i>Stalls</a></li>
+      <li><a href="messages.php" title="Messages"><i class="material-icons">mail</i>Messages</a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i>Notifications</a></li>
       <li><a href="account.php" class="nav-profile" title="Admin Account"><i class="material-icons">person</i>Account</a></li>
       <li><a href="contact.php" title="Contact Service"><i class="material-icons">contact_support</i>Contact</a></li>

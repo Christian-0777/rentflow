@@ -77,51 +77,17 @@ $pdo->prepare("UPDATE notifications SET is_read=1 WHERE receiver_id=?")->execute
     <?php endif; ?>
   </div>
 
-  <div class="tenant-card">
-    <h3><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">chat</i>Chat with Admin</h3>
-    <p style="font-size: 14px; margin-bottom: 16px;">Send a message to our support team for assistance.</p>
-    <button class="btn btn-primary" onclick="openReplyModal()">
-      <i class="material-icons" style="font-size: 18px;">mail</i> Send Message
-    </button>
-  </div>
-
-  <!-- Reply Modal -->
-  <div id="replyModal" class="modal">
-    <div class="modal-content">
-      <button class="modal-close" onclick="closeReplyModal()">&times;</button>
-      <h2 style="margin-bottom: 16px;">Send Message to Admin</h2>
-      <form action="/api/chat_send.php" method="post">
-        <input type="hidden" name="receiver_id" value="<?= $pdo->query("SELECT id FROM users WHERE role='admin' LIMIT 1")->fetchColumn(); ?>">
-        <div class="form-group">
-          <label>Your Message</label>
-          <textarea name="message" placeholder="Type your message here..." required></textarea>
-        </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-          <button class="btn btn-secondary" type="button" onclick="closeReplyModal()">Cancel</button>
-          <button class="btn btn-primary" type="submit">Send Message</button>
-        </div>
-      </form>
-    </div>
+  <div class="tenant-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+    <i class="material-icons" style="font-size: 40px; display: block; margin-bottom: 12px;">chat_bubble</i>
+    <h3 style="color: white; margin-bottom: 8px;">Need Support?</h3>
+    <p style="color: rgba(255,255,255,0.9); margin-bottom: 16px;">Head to your profile to chat with our admin support team.</p>
+    <a href="profile.php" class="btn" style="background: white; color: #667eea; font-weight: 600; border: none; text-decoration: none; display: inline-block; padding: 10px 20px; border-radius: 6px;">
+      <i class="material-icons" style="font-size: 18px; vertical-align: middle;">person</i> Go to Profile
+    </a>
   </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function openReplyModal() {
-  document.getElementById('replyModal').classList.add('show');
-}
-
-function closeReplyModal() {
-  document.getElementById('replyModal').classList.remove('show');
-}
-
-window.onclick = function(event) {
-  const modal = document.getElementById('replyModal');
-  if (event.target == modal) {
-    closeReplyModal();
-  }
-}
-</script>
 </body>
 </html>
  

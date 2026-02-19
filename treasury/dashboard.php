@@ -1,12 +1,9 @@
 <?php
 // treasury/dashboard.php
-// Adjust arrears totals per lease
+// Treasury role has been removed
 
-require_once __DIR__.'/../config/db.php';
-require_once __DIR__.'/../config/auth.php';
-
-// ✅ Use plain string for role check
-require_role('treasury');
+header('Location: /admin/login.php');
+exit;
 
 $msg = '';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
