@@ -21,7 +21,22 @@ $recent = $pdo->prepare("SELECT amount, payment_date FROM payments WHERE lease_i
 $recent->execute([$leaseId]);
 $last = $recent->fetch();
 
-$history = $pdo->prepare("SELECT payment_date, amount, method, transaction_id, receipt_path FROM payments WHERE lease_id=? ORDER BY payment_date DESC");
+$history = $pdo->prepare("
+  SELECT 
+    p.payment_date as date,
+    d.amount_due as total_amount,
+    p.amount as amount_paid,
+    CASE 
+      WHEN p.amount >= d.amount_due THEN 'Paid'
+      WHEN p.amount > 0 AND p.amount < d.amount_due THEN 'Partial'
+      ELSE 'Not Paid'
+    END as remarks,
+    LPAD(SUBSTR(MD5(p.transaction_id), 1, 4), 4, '0') as transaction_id
+  FROM payments p
+  LEFT JOIN dues d ON p.lease_id = d.lease_id AND MONTH(p.payment_date) = MONTH(d.due_date) AND YEAR(p.payment_date) = YEAR(d.due_date)
+  WHERE p.lease_id = ?
+  ORDER BY p.payment_date DESC
+");
 $history->execute([$leaseId]);
 $rows = $history->fetchAll();
 
@@ -131,26 +146,27 @@ usort($allHistory, function($a, $b) {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Amount</th>
+              <th>Total Amount</th>
+              <th>Amount Paid</th>
+              <th>Remarks</th>
               <th>Transaction ID</th>
-              <th>Receipt</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($rows as $r): ?>
               <tr>
-                <td><?= htmlspecialchars($r['payment_date']) ?></td>
-                <td><strong>₱<?= number_format($r['amount'],2) ?></strong></td>
-                <td><code style="font-size: 12px;"><?= htmlspecialchars(substr($r['transaction_id'], 0, 12)) ?>...</code></td>
+                <td><?= htmlspecialchars(date('M d, Y', strtotime($r['date']))) ?></td>
+                <td>₱<?= number_format($r['total_amount'], 2) ?></td>
+                <td><strong>₱<?= number_format($r['amount_paid'], 2) ?></strong></td>
                 <td>
-                  <?php if($r['receipt_path']): ?>
-                    <a class="btn btn-primary btn-small" href="<?= htmlspecialchars($r['receipt_path']) ?>" target="_blank">
-                      <i class="material-icons" style="font-size: 16px;">picture_as_pdf</i>
-                    </a>
-                  <?php else: ?>
-                    <span style="color: var(--secondary);">—</span>
-                  <?php endif; ?>
+                  <span class="badge <?= 
+                    $r['remarks'] === 'Paid' ? 'badge-success' : 
+                    ($r['remarks'] === 'Partial' ? 'badge-warning' : 'badge-danger')
+                  ?>">
+                    <?= htmlspecialchars($r['remarks']) ?>
+                  </span>
                 </td>
+                <td><code style="font-size: 12px;"><?= htmlspecialchars($r['transaction_id']) ?></code></td>
               </tr>
             <?php endforeach; ?>
           </tbody>
