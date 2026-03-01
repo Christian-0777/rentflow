@@ -8,6 +8,9 @@ require_once __DIR__.'/../config/auth.php';
 // ✅ Admin access only (treasury role removed)
 require_role('admin');
 
+// Fetch available stalls for transfer modal
+$availableStalls = $pdo->query("SELECT id, stall_no, type, location FROM stalls WHERE status='available' ORDER BY stall_no")->fetchAll();
+
 $search = $_GET['q'] ?? '';
 $order = $_GET['order'] ?? 'stall_no_asc';
 $status = $_GET['status'] ?? '';
@@ -171,6 +174,68 @@ foreach ($rows as $r) {
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
 
+<!-- Terminate Tenant Modal -->
+<div id="terminateModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span onclick="closeTerminateModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    <h3>Terminate Lease</h3>
+    <p>Are you sure you want to terminate this tenant's lease? This will end their lease and make the stall available.</p>
+    <form id="terminateForm" method="post" action="/rentflow/api/delete_tenant.php">
+      <input type="hidden" id="terminateTenantId" name="tenant_id" value="">
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button type="submit" class="btn danger">Yes, Terminate</button>
+        <button type="button" onclick="closeTerminateModal()" class="btn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Transfer Tenant Modal -->
+<div id="transferModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span onclick="closeTransferModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    <h3>Transfer Tenant</h3>
+    <form id="transferForm" method="post" action="/rentflow/api/transfer_tenant.php">
+      <input type="hidden" id="transferTenantId" name="tenant_id" value="">
+      <label for="transferStallSelect">Select New Stall:</label>
+      <select id="transferStallSelect" name="stall_id" required style="width:100%; padding:8px; margin-top:5px;">
+        <option value="">-- Choose a stall --</option>
+      </select>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button type="submit" class="btn">Transfer</button>
+        <button type="button" onclick="closeTransferModal()" class="btn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Update Documents Modal -->
+<div id="updateDocsModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span onclick="closeUpdateDocsModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    <h3>Update Tenant Documents</h3>
+    <form id="updateDocsForm" method="post" action="/rentflow/api/update_tenant_docs.php" enctype="multipart/form-data">
+      <input type="hidden" id="updateDocsTenantId" name="tenant_id" value="">
+      <label for="validId">Valid ID:</label><br>
+      <div id="currentValidId" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
+      <input type="file" id="validId" name="valid_id" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><br>
+      <label for="businessLogo">Business Logo:</label><br>
+      <div id="currentBusinessLogo" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
+      <input type="file" id="businessLogo" name="business_logo" accept=".png,.jpg,.jpeg,.gif,.webp"><br>
+      <label for="businessPermit">Business Permit:</label><br>
+      <div id="currentBusinessPermit" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
+      <input type="file" id="businessPermit" name="business_permit" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><br>
+      <label for="digitalSignature">Digital Signature:</label><br>
+      <div id="currentDigitalSignature" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
+      <input type="file" id="digitalSignature" name="digital_signature" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><br>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button type="submit" class="btn">Submit</button>
+        <button type="button" onclick="closeUpdateDocsModal()" class="btn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Message Modal -->
 <div id="messageModal" class="modal" style="display: none;">
   <div class="modal-content">
@@ -188,37 +253,153 @@ foreach ($rows as $r) {
 
 <script src="/rentflow/public/assets/js/table.js"></script>
 <script>
+// make availableStalls array available to JS
+const availableStalls = <?= json_encode($availableStalls) ?>;
+
 function handleTenantAction(action, tenantId) {
   if (action === 'terminate') {
-    if (confirm('Are you sure you want to terminate this tenant?')) {
-      // Implement terminate logic
-      alert('Terminate action for tenant ' + tenantId);
-    }
+    openTerminateModal(tenantId);
   } else if (action === 'transfer') {
-    // Implement transfer logic
-    alert('Transfer action for tenant ' + tenantId);
+    openTransferModal(tenantId);
   } else if (action === 'update_documents') {
-    // Implement update documents logic
-    alert('Update documents action for tenant ' + tenantId);
+    openUpdateDocsModal(tenantId);
   } else if (action === 'send_message') {
-    // Open message modal
-    document.getElementById('messageTo').value = tenantId;
-    document.getElementById('messageModal').style.display = 'block';
+    window.location.href = 'messages.php?tenant=' + tenantId;
   }
   // Reset select
   event.target.value = '';
 }
 
-function closeMessageModal() {
-  document.getElementById('messageModal').style.display = 'none';
+function openTerminateModal(tenantId) {
+  document.getElementById('terminateTenantId').value = tenantId;
+  document.getElementById('terminateModal').style.display = 'block';
 }
 
-// Close modal when clicking outside
-window.onclick = function(event) {
-  if (event.target == document.getElementById('messageModal')) {
-    closeMessageModal();
-  }
+function closeTerminateModal() {
+  document.getElementById('terminateModal').style.display = 'none';
 }
+
+function openTransferModal(tenantId) {
+  document.getElementById('transferTenantId').value = tenantId;
+  const select = document.getElementById('transferStallSelect');
+  select.innerHTML = '<option value="">-- Choose a stall --</option>';
+  availableStalls.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `${s.stall_no} - ${s.type.toUpperCase()} (${s.location})`;
+    select.appendChild(opt);
+  });
+  document.getElementById('transferModal').style.display = 'block';
+}
+
+function closeTransferModal() {
+  document.getElementById('transferModal').style.display = 'none';
+}
+
+function openUpdateDocsModal(tenantId) {
+  document.getElementById('updateDocsTenantId').value = tenantId;
+  // clear previews
+  ['ValidId','BusinessLogo','BusinessPermit','DigitalSignature'].forEach(id => {
+    const el = document.getElementById('current' + id);
+    if (el) el.textContent = '';
+  });
+  // fetch existing application docs
+  fetch('/rentflow/api/get_application_details.php?tenant_id=' + tenantId)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) return;
+      const showLink = (selector, path) => {
+        const el = document.getElementById(selector);
+        if (!el) return;
+        if (path) {
+          // show clickable link or text
+          let txt = path;
+          const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(path);
+          if (isImage) {
+            txt = '[image] ' + path;
+          }
+          el.innerHTML = 'Current: <a href="' + path + '" target="_blank">' + txt + '</a>';
+        } else {
+          el.textContent = 'No file uploaded';
+        }
+      };
+      showLink('currentValidId', data.valid_id_path);
+      showLink('currentBusinessLogo', data.business_logo_path);
+      showLink('currentBusinessPermit', data.business_permit_path);
+      showLink('currentDigitalSignature', data.signature_path);
+    })
+    .catch(err => console.error('Unable to load current docs', err));
+
+  document.getElementById('updateDocsModal').style.display = 'block';
+}
+
+function closeUpdateDocsModal() {
+  document.getElementById('updateDocsModal').style.display = 'none';
+}
+
+// Close any modal when clicking outside
+document.addEventListener('click', function(event) {
+  ['messageModal','terminateModal','transferModal','updateDocsModal'].forEach(id => {
+    const modal = document.getElementById(id);
+    if (modal && event.target == modal) {
+      modal.style.display = 'none';
+    }
+  });
+});
+
+// Handle terminate form via AJAX to use JSON response
+const terminateForm = document.getElementById('terminateForm');
+terminateForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/rentflow/api/delete_tenant.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Lease terminated successfully');
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.error||'Unknown'));
+      }
+    })
+    .catch(err => alert('Request failed: ' + err.message));
+});
+
+// Transfer form
+const transferForm = document.getElementById('transferForm');
+transferForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/rentflow/api/transfer_tenant.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Tenant transferred successfully');
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.error||'Unknown'));
+      }
+    })
+    .catch(err => alert('Request failed: ' + err.message));
+});
+
+// Update documents form
+const updateDocsForm = document.getElementById('updateDocsForm');
+updateDocsForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/rentflow/api/update_tenant_docs.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Documents updated successfully');
+        closeUpdateDocsModal();
+      } else {
+        alert('Error: ' + (data.error||'Unknown'));
+      }
+    })
+    .catch(err => alert('Request failed: ' + err.message));
+});
 </script>
 </body>
 </html>

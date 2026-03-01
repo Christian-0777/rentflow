@@ -152,6 +152,11 @@ Authenticated Access (based on role):
   - Lease start date and status
 - Search and filter capabilities
 - Bulk actions (delete, export, message)
+- Row-level action dropdown providing:
+  - Terminate lease (via confirmation modal)
+  - Transfer tenant to another available stall
+  - Update tenant documents (ID, permit, logo, signature)
+  - Send message (redirects to messages page)
 - View tenant profile/details in modal
 - Quick links to tenant payments and messages
 
@@ -574,6 +579,9 @@ Inspired by Facebook Messenger with two-panel layout:
 - ✅ Lease start date tracking
 - ✅ Lease history and archival
 - ✅ Tenant application workflow with admin approval
+- ✅ Lease termination from admin panel (stalls automatically freed)
+- ✅ Tenant transfer between stalls with availability check
+- ✅ Upload or replace tenant documents (ID, permit, logo, signature) via admin interface
 
 ### 3. **Stall Application System**
 - ✅ Tenant application submission with required documents:

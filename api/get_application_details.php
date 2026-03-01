@@ -7,6 +7,7 @@ require_once __DIR__.'/../config/auth.php';
 
 // Require admin role
 require_role('admin');
+header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
@@ -15,15 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 $appId = $_GET['id'] ?? '';
+$tenantId = $_GET['tenant_id'] ?? '';
 
-if (!$appId) {
+if (!$appId && !$tenantId) {
     http_response_code(400);
-    echo json_encode(['error' => 'Application ID required']);
+    echo json_encode(['error' => 'Application ID or tenant ID required']);
     exit;
 }
 
-// Get application details
-$stmt = $pdo->prepare("
+// Get application details (either by id or latest for tenant)
+if ($appId) {
+    $stmt = $pdo->prepare("
     SELECT sa.*,
            CONCAT(u.first_name, ' ', u.last_name) AS tenant_name,
            u.email,
@@ -33,8 +36,23 @@ $stmt = $pdo->prepare("
     JOIN users u ON sa.tenant_id = u.id
     WHERE sa.id = ?
 ");
-$stmt->execute([$appId]);
-$application = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt->execute([$appId]);
+    $application = $stmt->fetch(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $pdo->prepare("
+    SELECT sa.*,
+           CONCAT(u.first_name, ' ', u.last_name) AS tenant_name,
+           u.email,
+           u.business_name,
+           u.tenant_id
+    FROM stall_applications sa
+    JOIN users u ON sa.tenant_id = u.id
+    WHERE sa.tenant_id = ?
+    ORDER BY sa.id DESC LIMIT 1
+");
+    $stmt->execute([$tenantId]);
+    $application = $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 if (!$application) {
     http_response_code(404);
