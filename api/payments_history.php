@@ -5,7 +5,7 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/auth.php';
 
-// Require admin role (treasury role removed)
+
 require_role('admin');
 
 $leaseId = (int)($_GET['lease_id'] ?? 0);
