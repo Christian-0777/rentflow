@@ -205,7 +205,6 @@ foreach ($stall_breakdown as $type => $data) {
     <h3>Export Full Report</h3>
     <button class="btn" onclick="exportPageAsWord()">📄 Export as Word</button>
     <button class="btn" onclick="exportPageAsPDF()">📑 Export as PDF</button>
-    <button class="btn" onclick="exportPageAsGoogleDocs()">📗 Open in Google Docs</button>
   </section>
 
   <!-- 👥 New Tenants Section -->
@@ -815,37 +814,7 @@ foreach ($stall_breakdown as $type => $data) {
     window.URL.revokeObjectURL(url);
   }
 
-  // Export to Google Docs
-  function exportPageAsGoogleDocs() {
-    const title = 'RentFlow Report - ' + new Date().toLocaleDateString();
-    const content = document.querySelector('main.content').innerText;
-    
-    // Create a simple HTML table from content
-    const htmlContent = document.querySelector('main.content').innerHTML;
-    const htmlData = `
-      <html><head><title>${title}</title></head><body>
-      <h1>${title}</h1>
-      ${htmlContent}
-      </body></html>
-    `;
 
-    // Encode for Google Docs
-    const encodedHtml = encodeURIComponent(htmlData);
-    const googleDocsUrl = `https://docs.google.com/document/create?title=${encodeURIComponent(title)}&body=${encodedHtml}`;
-    
-    // Alternative: Use a simple approach with data URI
-    const dataUri = 'data:text/html;charset=utf-8,' + encodedHtml;
-    const blob = new Blob([htmlData], { type: 'text/html' });
-    const url = window.URL.createObjectURL(blob);
-    
-    // Open in new tab for user to save
-    const win = window.open(url, '_blank');
-    
-    // Try to trigger Google Docs import (requires Google account)
-    setTimeout(() => {
-      alert('To import this into Google Docs:\n1. Copy the content from the new window\n2. Go to Google Docs\n3. Create a new document and paste');
-    }, 500);
-  }
 </script>
 
 </body>
