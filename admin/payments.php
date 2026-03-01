@@ -149,6 +149,12 @@ $payments_rows = $pdo->query("
         s.stall_no, 
         CONCAT(u.first_name, ' ', u.last_name) AS full_name, 
         u.business_name,
+        COALESCE(a.total_arrears, 0) as total_arrears,
+        -- total arrears paid by tenant (entries recorded through arrear payment process)
+        COALESCE((
+            SELECT SUM(amount) FROM payments 
+            WHERE lease_id = l.id AND remarks LIKE 'Arrear Payment%'
+        ), 0) as total_arrears_paid,
         COALESCE((
             SELECT payment_date FROM payments 
             WHERE lease_id = l.id 
@@ -176,6 +182,7 @@ $payments_rows = $pdo->query("
     FROM leases l
     JOIN users u ON l.tenant_id=u.id
     JOIN stalls s ON l.stall_id=s.id
+    LEFT JOIN arrears a ON a.lease_id = l.id
     WHERE u.role = 'tenant'
     ORDER BY s.stall_no ASC
 ")->fetchAll();
@@ -198,13 +205,12 @@ $arrears_rows = $pdo->query("
             FROM arrear_entries
             WHERE lease_id = l.id AND source IN ('partial_payment', 'marked_not_paid', 'overdue_7days')
         ), 0) as previous_arrears,
+        -- number of days passed since first unpaid arrear entry was created
         COALESCE((
-            SELECT COALESCE(SUM(penalty_amount), 0)
-            FROM penalties
-            WHERE lease_id = l.id 
-            AND MONTH(applied_on) = MONTH(CURDATE())
-            AND YEAR(applied_on) = YEAR(CURDATE())
-        ), 0) as current_month_penalties
+            SELECT DATEDIFF(CURDATE(), MIN(created_on))
+            FROM arrear_entries
+            WHERE lease_id = l.id AND is_paid = 0
+        ), 0) as days_since_arrears
     FROM leases l
     JOIN users u ON l.tenant_id=u.id
     JOIN stalls s ON l.stall_id=s.id
@@ -327,6 +333,7 @@ $arrears_rows = $pdo->query("
                     <th>Business</th>
                     <th>Previous Payment</th>
                     <th>Previous Status</th>
+                    <th>Total Arrears Paid</th>
                     <th>Next Payment</th>
                     <th>Next Payment Status</th>
                     <th>Actions</th>
@@ -358,6 +365,15 @@ $arrears_rows = $pdo->query("
                             echo '<small>' . htmlspecialchars($row['last_payment_status']) . '</small>';
                         } else {
                             echo '—';
+                        }
+                        ?>
+                    </td>
+                    <td>
+                        <?php
+                        if ($row['total_arrears_paid'] > 0) {
+                            echo '<small>₱' . number_format($row['total_arrears_paid'],2) . '</small>';
+                        } else {
+                            echo '<small>—</small>';
                         }
                         ?>
                     </td>
@@ -413,7 +429,7 @@ $arrears_rows = $pdo->query("
                     <th>Tenant</th>
                     <th>Business</th>
                     <th>Previous Arrears</th>
-                    <th>Current Penalties</th>
+                    <th>Days Since Arrears</th>
                     <th>Total Arrears</th>
                     <th>Actions</th>
                 </tr>
@@ -429,16 +445,17 @@ $arrears_rows = $pdo->query("
                     </td>
                     <td><?= htmlspecialchars($row['business_name'] ?? '—') ?></td>
                     <td>
-                        <span class="arrear-amount" onclick="showArrearsHistory(<?= $row['lease_id'] ?>, <?= $row['previous_arrears'] ?>)">
+                        <span class="arrear-amount" onclick="showArrearsHistory(<?= $row['lease_id'] ?>, <?= $row['total_arrears'] ?>)">
                             ₱<?= number_format($row['previous_arrears'], 2) ?>
                         </span>
                     </td>
-                    <td>₱<?= number_format($row['current_month_penalties'], 2) ?></td>
+                    <td><?= $row['days_since_arrears'] ? $row['days_since_arrears'].' day(s)' : '—' ?></td>
                     <td>
                         <span class="arrear-amount">₱<?= number_format($row['total_arrears'], 2) ?></span>
                     </td>
                     <td>
-                        <a href="notifications.php?to=<?= $row['tenant_id'] ?>" class="btn small">Message</a>
+                        <a href="notifications.php?to=<?= $row['tenant_id'] ?>" class="btn small" style="margin-right:5px;">Message</a>
+                        <button class="btn small" onclick="showArrearsHistory(<?= $row['lease_id'] ?>, <?= $row['total_arrears'] ?>)">Pay</button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -507,6 +524,30 @@ $arrears_rows = $pdo->query("
         <div id="arrearsHistoryContent" style="margin-top: 20px;">
             <p>Loading...</p>
         </div>
+    </div>
+</div>
+
+<!-- ARREAR PAYMENT MODAL -->
+<div id="arrearPayModal" style="display:none; position: fixed; z-index: 1100; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px;">
+        <span onclick="closeArrearPayModal()" style="color:#aaa; float:right; font-size:28px; cursor:pointer;">&times;</span>
+        <h3>Pay Arrear</h3>
+        <form id="arrearPayForm">
+            <input type="hidden" id="payLeaseId" name="lease_id">
+            <input type="hidden" id="payDueDate" name="due_date">
+            <div style="margin-bottom:15px;">
+                <label for="payAmount">Amount (₱):</label>
+                <input type="number" id="payAmount" name="amount_paid" step="0.01" min="0" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-top:5px;" readonly>
+            </div>
+            <div style="margin-bottom:15px;">
+                <label for="payPenalty">Penalty (₱):</label>
+                <input type="number" id="payPenalty" name="penalty" step="0.01" min="0" value="0" placeholder="Enter penalty amount" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-top:5px;">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn" onclick="submitArrearPayment()" style="flex:1;">Confirm</button>
+                <button type="button" class="btn" onclick="closeArrearPayModal()" style="flex:1; background-color:#6c757d;">Cancel</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -622,7 +663,8 @@ function showArrearsHistory(leaseId, previousArrears) {
                     html += '<td>₱' + item.amount.toFixed(2) + '</td>';
                     html += '<td>' + htmlEscape(item.type) + '</td>';
                     
-                    if (item.type === 'Unpaid Due' || item.type === 'Arrear Entry') {
+                    // allow payment for any arrear entry (non-penalty)
+                    if (item.type !== 'Penalty Applied') {
                         html += '<td><button class="btn small" onclick="payArrear(' + leaseId + ', \'' + item.date + '\', ' + item.amount + ')">Pay</button></td>';
                     } else {
                         html += '<td>—</td>';
@@ -646,32 +688,50 @@ function closeArrearsHistoryModal() {
     document.getElementById('arrearsHistoryModal').style.display = 'none';
 }
 
+// open arrear payment modal with prefilled values
 function payArrear(leaseId, dueDate, amount) {
-    const amountPaid = prompt('Enter amount to pay for this arrear (₱' + amount.toFixed(2) + '):', amount.toFixed(2));
-    
-    if (amountPaid && parseFloat(amountPaid) > 0) {
-        fetch('/rentflow/api/pay_arrear.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: 'lease_id=' + leaseId + '&due_date=' + encodeURIComponent(dueDate) + '&amount_paid=' + encodeURIComponent(amountPaid)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Arrear payment recorded successfully!');
-                    showArrearsHistory(leaseId, 0);
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                alert('Error processing payment: ' + error.message);
-            });
-    }
+    document.getElementById('payLeaseId').value = leaseId;
+    document.getElementById('payDueDate').value = dueDate;
+    document.getElementById('payAmount').value = amount.toFixed(2);
+    document.getElementById('payPenalty').value = '0.00';
+    document.getElementById('arrearPayModal').style.display = 'block';
+}
+
+// submit arrear payment request
+function submitArrearPayment() {
+    const leaseId = document.getElementById('payLeaseId').value;
+    const dueDate = document.getElementById('payDueDate').value;
+    const amountPaid = document.getElementById('payAmount').value;
+    const penalty = document.getElementById('payPenalty').value;
+
+    fetch('/rentflow/api/pay_arrear.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'lease_id=' + leaseId + '&due_date=' + encodeURIComponent(dueDate) +
+              '&amount_paid=' + encodeURIComponent(amountPaid) +
+              '&penalty=' + encodeURIComponent(penalty)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Arrear payment recorded successfully!');
+            closeArrearPayModal();
+            showArrearsHistory(leaseId, 0);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error processing payment: ' + error.message);
+    });
+}
+
+function closeArrearPayModal() {
+    document.getElementById('arrearPayModal').style.display = 'none';
 }
 
 // ============================================================

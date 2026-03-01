@@ -30,7 +30,12 @@ $sql = "
 SELECT u.id, s.stall_no, s.type AS stall_category, CONCAT(u.first_name, ' ', u.last_name) AS full_name, u.tenant_id, u.business_name, u.status,
        l.id AS lease_id,
        COALESCE((SELECT SUM(amount) FROM payments WHERE lease_id=l.id),0) AS total_paid,
-       COALESCE(a.total_arrears,0) AS total_arrears
+       COALESCE(a.total_arrears,0) AS total_arrears,
+       -- total arrears paid (payments created by arrear payment process)
+       COALESCE((
+           SELECT SUM(amount) FROM payments 
+           WHERE lease_id=l.id AND remarks LIKE 'Arrear Payment%'
+       ),0) AS total_arrears_paid
 FROM leases l
 JOIN users u ON l.tenant_id=u.id
 JOIN stalls s ON l.stall_id=s.id
@@ -63,7 +68,8 @@ foreach ($rows as $r) {
     'business' => $r['business_name'],
     'status' => $r['status'],
     'total_paid' => '₱' . number_format($r['total_paid'], 2),
-    'total_arrears' => '₱' . number_format($r['total_arrears'], 2)
+    'total_arrears' => '₱' . number_format($r['total_arrears'], 2),
+    'total_arrears_paid' => $r['total_arrears_paid'] > 0 ? '₱' . number_format($r['total_arrears_paid'], 2) : "None"
   ];
 }
 ?>
@@ -75,6 +81,15 @@ foreach ($rows as $r) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .prev-payments {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .prev-payments:hover {
+      opacity: 0.8;
+    }
+  </style>
 </head>
 <body class="admin">
 
@@ -123,7 +138,7 @@ foreach ($rows as $r) {
   <section class="actions">
     <form action="/rentflow/api/export_csv.php" method="post">
       <input type="hidden" name="payload" value="<?= htmlspecialchars(json_encode($exportData)) ?>">
-      <input type="hidden" name="headers" value="<?= htmlspecialchars(json_encode(['Stall No.','Category','Tenant','Business','Status','Total Paid','Total Arrears'])) ?>">
+      <input type="hidden" name="headers" value="<?= htmlspecialchars(json_encode(['Stall No.','Category','Tenant','Business','Status','Total Paid','Total Arrears','Total Arrears Paid'])) ?>">
       <input type="hidden" name="filename" value="tenants_list.csv">
       <button class="btn">Export CSV</button>
     </form>
@@ -132,7 +147,7 @@ foreach ($rows as $r) {
   <table class="table">
     <thead>
       <tr>
-        <th>Stall No.</th><th>Category</th><th>Tenant</th><th>Business</th><th>Status</th><th>Total Paid</th><th>Total Arrears</th><th>Previous Payments</th><th>Actions</th>
+        <th>Stall No.</th><th>Category</th><th>Tenant</th><th>Business</th><th>Status</th><th>Total Paid</th><th>Total Arrears</th><th>Total Arrears Paid</th><th>Previous Payments</th><th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -145,7 +160,15 @@ foreach ($rows as $r) {
           <td><span class="badge"><?= htmlspecialchars(strtoupper($r['status'])) ?></span></td>
           <td>₱<?= number_format($r['total_paid'],2) ?></td>
           <td>₱<?= number_format($r['total_arrears'],2) ?></td>
+          <td><?php
+                if ($r['total_arrears_paid'] > 0) {
+                    echo '₱' . number_format($r['total_arrears_paid'],2);
+                } else {
+                    echo "There's no arrears to this person";
+                }
+            ?></td>
           <td>
+            <span class="prev-payments" onclick="showPaymentsHistory(<?= $r['lease_id'] ?>)">
             <?php
               $pp = $pdo->prepare("SELECT payment_date, amount FROM payments WHERE lease_id=? ORDER BY payment_date DESC LIMIT 3");
               $pp->execute([$r['lease_id']]);
@@ -153,6 +176,7 @@ foreach ($rows as $r) {
                 echo "<div>".htmlspecialchars($p['payment_date'])." — ₱".number_format($p['amount'],2)."</div>";
               }
             ?>
+            </span>
           </td>
           <td>
             <select onchange="handleTenantAction(this.value, <?= $r['id'] ?>)">
@@ -251,6 +275,15 @@ foreach ($rows as $r) {
   </div>
 </div>
 
+<!-- PAYMENTS HISTORY MODAL -->
+<div id="paymentsHistoryModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width:600px;">
+    <span onclick="closePaymentsHistoryModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    <h3>Previous Payments</h3>
+    <div id="paymentsHistoryContent" style="margin-top:15px;"></div>
+  </div>
+</div>
+
 <script src="/rentflow/public/assets/js/table.js"></script>
 <script>
 // make availableStalls array available to JS
@@ -339,7 +372,7 @@ function closeUpdateDocsModal() {
 
 // Close any modal when clicking outside
 document.addEventListener('click', function(event) {
-  ['messageModal','terminateModal','transferModal','updateDocsModal'].forEach(id => {
+  ['messageModal','terminateModal','transferModal','updateDocsModal','paymentsHistoryModal'].forEach(id => {
     const modal = document.getElementById(id);
     if (modal && event.target == modal) {
       modal.style.display = 'none';
@@ -400,6 +433,55 @@ updateDocsForm.addEventListener('submit', function(e) {
     })
     .catch(err => alert('Request failed: ' + err.message));
 });
+
+// ============================================================
+// PAYMENTS HISTORY MODAL FUNCTIONS
+// ============================================================
+function showPaymentsHistory(leaseId) {
+    const modal = document.getElementById('paymentsHistoryModal');
+    const content = document.getElementById('paymentsHistoryContent');
+    content.innerHTML = '<p>Loading...</p>';
+    modal.style.display = 'block';
+
+    fetch('/rentflow/api/payments_history.php?lease_id=' + leaseId, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            content.innerHTML = '<p style="color: #d9534f;">Error: ' + htmlEscape(data.error) + '</p>';
+            return;
+        }
+        if (data.history && data.history.length > 0) {
+            let html = '<table class="table" style="margin-top:15px;"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Remarks</th></tr></thead><tbody>';
+            data.history.forEach(p => {
+                html += '<tr>' +
+                        '<td>' + htmlEscape(p.date) + '</td>' +
+                        '<td>₱' + parseFloat(p.amount).toFixed(2) + '</td>' +
+                        '<td>' + htmlEscape(p.method) + '</td>' +
+                        '<td>' + htmlEscape(p.remarks) + '</td>' +
+                        '</tr>';
+            });
+            html += '</tbody></table>';
+            content.innerHTML = html;
+        } else {
+            content.innerHTML = '<p>No payment history found.</p>';
+        }
+    })
+    .catch(err => {
+        content.innerHTML = '<p style="color: #d9534f;">Error loading history: ' + htmlEscape(err.message) + '</p>';
+    });
+}
+
+function closePaymentsHistoryModal() {
+    document.getElementById('paymentsHistoryModal').style.display = 'none';
+}
+
+function htmlEscape(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>\"']/g, function(m) { return map[m]; });
+}
+
 </script>
 </body>
 </html>

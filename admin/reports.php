@@ -161,6 +161,43 @@ foreach ($stall_breakdown as $type => $data) {
   $stall_labels[] = $type . ' - Maintenance';
   $stall_values[] = $data['maintenance'];
 }
+
+// Unpaid arrears list
+$unpaid_arrears = $pdo->query(
+    "SELECT 
+        l.id as lease_id, 
+        u.id as tenant_id, 
+        u.tenant_id as tenant_code, 
+        s.stall_no, 
+        CONCAT(u.first_name,' ',u.last_name) as full_name, 
+        u.business_name, 
+        COALESCE(a.total_arrears,0) as total_arrears
+    FROM leases l
+    JOIN users u ON l.tenant_id = u.id
+    JOIN stalls s ON l.stall_id = s.id
+    LEFT JOIN arrears a ON a.lease_id = l.id
+    WHERE u.role='tenant' AND COALESCE(a.total_arrears,0) > 0
+    ORDER BY s.stall_no ASC"
+)->fetchAll();
+
+// Paid arrears records (payments)
+$paid_arrears = $pdo->query(
+    "SELECT 
+        p.payment_date,
+        p.amount,
+        l.id as lease_id,
+        u.id as tenant_id,
+        u.tenant_id as tenant_code,
+        s.stall_no,
+        CONCAT(u.first_name,' ',u.last_name) as full_name,
+        u.business_name
+    FROM payments p
+    JOIN leases l ON p.lease_id = l.id
+    JOIN users u ON l.tenant_id = u.id
+    JOIN stalls s ON l.stall_id = s.id
+    WHERE p.method = 'arrear_payment'
+    ORDER BY p.payment_date DESC"
+)->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -342,6 +379,97 @@ foreach ($stall_breakdown as $type => $data) {
     <div class="export-buttons">
       <a href="?export=revenue_csv" class="btn">📥 CSV Export</a>
       <a href="?export=revenue_xlsx" class="btn">📥 Excel Export</a>
+    </div>
+  </section>
+
+  <!-- 🧾 Arrears Section -->
+  <section class="report-section">
+    <h2>Arrears</h2>
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchReportTab('unpaid', event)">Unpaid</button>
+      <button class="tab-button" onclick="switchReportTab('paid', event)">Paid</button>
+    </div>
+
+    <div id="unpaid" class="tab-content active">
+      <div class="table-header">
+        <h3>Unpaid Arrears</h3>
+        <div class="export-buttons">
+          <button class="btn small" onclick="exportTableAsExcel('unpaid_arrears_table','unpaid_arrears')">📥 Excel</button>
+          <button class="btn small" onclick="exportTableAsPDF('unpaid_arrears_table','unpaid_arrears')">📄 PDF</button>
+        </div>
+      </div>
+      <table id="unpaid_arrears_table" class="table">
+        <thead>
+          <tr>
+            <th>Stall</th>
+            <th>Tenant</th>
+            <th>Business</th>
+            <th>Total Arrears</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (count($unpaid_arrears) > 0): ?>
+            <?php foreach ($unpaid_arrears as $r): ?>
+              <tr>
+                <td><?= htmlspecialchars($r['stall_no']) ?></td>
+                <td>
+                  <a href="tenant_profile.php?id=<?= $r['tenant_id'] ?>">
+                    <?= htmlspecialchars($r['full_name']) ?> (<?= htmlspecialchars($r['tenant_code']) ?>)
+                  </a>
+                </td>
+                <td><?= htmlspecialchars($r['business_name'] ?? '—') ?></td>
+                <td>₱<?= number_format($r['total_arrears'], 2) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <tr>
+              <td colspan="4" style="text-align:center;color:#999;">No unpaid arrears</td>
+            </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="paid" class="tab-content">
+      <div class="table-header">
+        <h3>Paid Arrears</h3>
+        <div class="export-buttons">
+          <button class="btn small" onclick="exportTableAsExcel('paid_arrears_table','paid_arrears')">📥 Excel</button>
+          <button class="btn small" onclick="exportTableAsPDF('paid_arrears_table','paid_arrears')">📄 PDF</button>
+        </div>
+      </div>
+      <table id="paid_arrears_table" class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Stall</th>
+            <th>Tenant</th>
+            <th>Business</th>
+            <th>Amount Paid</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (count($paid_arrears) > 0): ?>
+            <?php foreach ($paid_arrears as $r): ?>
+              <tr>
+                <td><?= htmlspecialchars($r['payment_date']) ?></td>
+                <td><?= htmlspecialchars($r['stall_no']) ?></td>
+                <td>
+                  <a href="tenant_profile.php?id=<?= $r['tenant_id'] ?>">
+                    <?= htmlspecialchars($r['full_name']) ?> (<?= htmlspecialchars($r['tenant_code']) ?>)
+                  </a>
+                </td>
+                <td><?= htmlspecialchars($r['business_name'] ?? '—') ?></td>
+                <td>₱<?= number_format($r['amount'], 2) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <tr>
+              <td colspan="5" style="text-align:center;color:#999;">No paid arrears records</td>
+            </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -548,6 +676,34 @@ foreach ($stall_breakdown as $type => $data) {
     .chart-type-btn {
       flex: 1;
     }
+
+    /* Tabs for arrears section */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+    }
+    .tab-button {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .tab-button.active {
+      border-bottom-color: #007bff;
+      color: #007bff;
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
   }
 </style>
 
@@ -718,6 +874,19 @@ foreach ($stall_breakdown as $type => $data) {
   // Initialize stall chart
   initStallChart('doughnut');
 
+  // Switch between unpaid/paid arrears tabs
+  function switchReportTab(tabName, event) {
+    // hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    // remove active class from buttons
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+    document.getElementById(tabName).classList.add('active');
+    if (event && event.currentTarget) {
+      event.currentTarget.classList.add('active');
+    }
+  }
+
   // Export chart as PNG
   function exportChartAsPNG(canvasId, filename) {
     const canvas = document.getElementById(canvasId).parentElement;
@@ -744,6 +913,45 @@ foreach ($stall_breakdown as $type => $data) {
       const imgWidth = 280;
       const imgHeight = (newCanvas.height * imgWidth) / newCanvas.width;
       
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      pdf.save(filename + '_' + new Date().toISOString().split('T')[0] + '.pdf');
+    });
+  }
+
+  // Export table as Excel (CSV) by id
+  function exportTableAsExcel(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cols = row.querySelectorAll('th, td');
+      let rowData = [];
+      cols.forEach(col => {
+        rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+      });
+      csv.push(rowData.join(','));
+    });
+
+    const csvString = csv.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename + '_' + new Date().toISOString().split('T')[0] + '.csv';
+    link.click();
+  }
+
+  // Export table section as PDF by id
+  function exportTableAsPDF(tableId, filename) {
+    const element = document.getElementById(tableId);
+    if (!element) return;
+    html2canvas(element, { scale: 2 }).then(newCanvas => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const imgData = newCanvas.toDataURL('image/png');
+      const imgWidth = 280;
+      const imgHeight = (newCanvas.height * imgWidth) / newCanvas.width;
       pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
       pdf.save(filename + '_' + new Date().toISOString().split('T')[0] + '.pdf');
     });

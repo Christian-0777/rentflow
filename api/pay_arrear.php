@@ -11,6 +11,7 @@ require_role('admin');
 $leaseId = (int)($_POST['lease_id'] ?? 0);
 $dueDate = $_POST['due_date'] ?? '';
 $amountPaid = (float)($_POST['amount_paid'] ?? 0);
+$penaltyPaid = (float)($_POST['penalty'] ?? 0);
 
 if (!$leaseId || !$dueDate || $amountPaid <= 0) {
     http_response_code(400);
@@ -38,11 +39,18 @@ try {
     
     $fullAmount = $entry['amount'];
     
-    // Insert payment record
+    // compute combined payment including any penalty
+    $totalPaid = $amountPaid + $penaltyPaid;
+    $remarks = 'Arrear Payment for ' . $dueDate;
+    if ($penaltyPaid > 0) {
+        $remarks .= ' + Penalty ' . number_format($penaltyPaid, 2);
+    }
+    
+    // Insert payment record (method must fit ENUM)
     $pdo->prepare("
         INSERT INTO payments (lease_id, amount, payment_date, method, remarks) 
-        VALUES (?, ?, CURDATE(), 'arrear_payment', 'Arrear Payment for " . $dueDate . "')
-    ")->execute([$leaseId, $amountPaid]);
+        VALUES (?, ?, CURDATE(), 'manual', ?)
+    ")->execute([$leaseId, $totalPaid, $remarks]);
     
     if ($amountPaid >= $fullAmount) {
         // Mark arrear entry as paid
@@ -52,12 +60,12 @@ try {
             WHERE id = ?
         ")->execute([$entry['id']]);
         
-        // Update total arrears
+        // Update total arrears (deduct arrear amount and penalty if any)
         $pdo->prepare("
             UPDATE arrears 
-            SET total_arrears = total_arrears - ? 
+            SET total_arrears = total_arrears - ? - ? 
             WHERE lease_id = ?
-        ")->execute([$fullAmount, $leaseId]);
+        ")->execute([$fullAmount, $penaltyPaid, $leaseId]);
     } else {
         // Partial payment - create new arrear entry for remaining amount
         $remaining = $fullAmount - $amountPaid;
@@ -68,12 +76,12 @@ try {
             WHERE id = ?
         ")->execute([$amountPaid, $entry['id']]);
         
-        // Update total arrears
+        // Update total arrears (deduct paid amount and penalty)
         $pdo->prepare("
             UPDATE arrears 
-            SET total_arrears = total_arrears - ? 
+            SET total_arrears = total_arrears - ? - ? 
             WHERE lease_id = ?
-        ")->execute([$amountPaid, $leaseId]);
+        ")->execute([$amountPaid, $penaltyPaid, $leaseId]);
     }
     
     $pdo->commit();

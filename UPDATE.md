@@ -6,7 +6,54 @@ This document tracks all minor and major changes made to the RentFlow project.
 
 ## **MAJOR CHANGES**
 
-### 1. **Stall Application System & Admin Approval Workflow** (Latest)
+### 1. **Payment History Modal & Arrears UX Enhancements** (Latest)
+- **Version**: 1.5.0
+- **Status**: Implemented & Tested
+- **Description**: Added clickable payment amounts that open a modal with full history, improved arrears tables with export and interactive pay flow, and updated related admin views.
+
+#### Key Features Added:
+
+**Payment History Modal**
+- Clicking any amount in the Previous Payments column on `tenants.php` opens a modal showing that tenant’s full payment history.
+- New API endpoint `payments_history.php` returns JSON list of payments for a lease (admin auth enforced).
+- CSS rule highlights clickable payment cells; span wrappers with `onclick` handlers added.
+- Modal markup, show/close JS handlers, and `htmlEscape()` utility introduced.
+- Ajax population displays date, amount, method and remarks without page reload.
+
+**Arrears Section Updates**
+- Unpaid and Paid arrears tables now include section titles and export controls (Excel/CSV and PDF).
+- Export logic implemented via `exportTableAsExcel` and `exportTableAsPDF` using html2canvas/jsPDF.
+- Buttons added within `<div class="table-header">` wrappers above each table in `reports.php`.
+
+**Payments Page Enhancements (`admin/payments.php`)**
+- "Current Penalties" column replaced with "Days Since Arrears" calculated from oldest unpaid entry.
+- Added "Total Arrears Paid" column to payments table and tenants table (admin view).
+- SQL adjustments ensure `total_arrears_paid` is selected and exported.
+
+**Tenants Table (`admin/tenants.php`) Changes**
+- "Total Arrears Paid" column shows formatted amount or message when zero.
+- CSV export includes the new field with header label.
+
+**New Pay Button Flow**
+- "Pay" button added to each row in the Arrears tab of `payments.php`.
+- Opens arrears history modal and allows submitting payment; modal refreshes table on close.
+- JavaScript fixes ensure Pay button shows for any non-penalty entry.
+- Penalty field now required with placeholder to clarify manual entry.
+
+**Reports Page (`reports.php`) Additions**
+- Added `$unpaid_arrears` and `$paid_arrears` datasets and inserted tabbed arrears section below Revenue Summary.
+- Tabs styled and scripted like payments page; both tables display appropriate columns.
+
+**Miscellaneous Adjustments**
+- Reused styling/JS from payments page for tabs and modals.
+- No PHP syntax/lint errors detected after edits.
+- Confirmed new pay flow works and reports tab displays correctly.
+
+✅ Result: Clicking entries in Previous Payments now opens history modal, arrears sections support exports and pay actions, and admin tables include accurate arrears totals.
+
+---
+
+### 2. **Stall Application System & Admin Approval Workflow** (Latest)
 - **Version**: 1.4.0
 - **Status**: Implemented & Tested
 - **Description**: Complete redesign of stall application process with tenant application submission and admin approval/stall assignment workflow
