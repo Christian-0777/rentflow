@@ -15,7 +15,10 @@ require __DIR__ . '/../vendor/autoload.php';
 // SendGrid Configuration
 define('SENDGRID_API_KEY', env('SENDGRID_API_KEY', ''));
 
-// SMTP Configuration Constants (Fallback)
+// Mailer driver control (auto, smtp, sendgrid)
+define('MAILER_DRIVER', env('MAILER_DRIVER', 'auto'));
+
+// SMTP Configuration Constants (used whenever SMTP is chosen)
 define('MAIL_HOST', env('MAIL_HOST', 'smtp.gmail.com'));
 define('MAIL_PORT', env('MAIL_PORT', 587));
 define('MAIL_USERNAME', env('MAIL_USERNAME', 'no-reply@rentflow.local'));
@@ -32,16 +35,30 @@ define('MAIL_FROM_NAME', env('MAIL_FROM_NAME', 'Rentflow Team'));
  * @return bool True if sent successfully, false otherwise
  */
 function send_mail($to, $subject, $body) {
-    // Try SendGrid first if API key is configured
+    // Determine which provider to use based on driver setting and available keys
+    // mailer_driver: 'auto' (default), 'smtp', 'sendgrid'
+    if (MAILER_DRIVER === 'sendgrid') {
+        return send_mail_sendgrid($to, $subject, $body);
+    }
+
+    if (MAILER_DRIVER === 'smtp') {
+        return send_mail_phpmailer($to, $subject, $body);
+    }
+
+    // auto mode: try SendGrid if key present, otherwise SMTP
     if (!empty(SENDGRID_API_KEY)) {
         if (send_mail_sendgrid($to, $subject, $body)) {
             return true;
         }
         error_log("SendGrid email failed, falling back to PHPMailer");
     }
-    
+
     // Fallback to PHPMailer
-    return send_mail_phpmailer($to, $subject, $body);
+    $fallbackOk = send_mail_phpmailer($to, $subject, $body);
+    if (!$fallbackOk) {
+        error_log("Both SendGrid and PHPMailer failed to send email to: $to");
+    }
+    return $fallbackOk;
 }
 
 /**
@@ -85,10 +102,17 @@ function send_mail_sendgrid($to, $subject, $body) {
  * @return bool True if sent successfully, false otherwise
  */
 function send_mail_phpmailer($to, $subject, $body) {
-    // If SMTP is not configured, log but don't fail
+    // If SMTP is not configured, try using PHP's mail() as a last resort
     if (empty(MAIL_HOST) || empty(MAIL_USERNAME)) {
-        error_log("PHPMailer not configured (MAIL_HOST or MAIL_USERNAME empty). Email not sent to: $to");
-        return true; // Return true to allow registration to continue
+        error_log("PHPMailer not configured (MAIL_HOST or MAIL_USERNAME empty). Attempting PHP mail() fallback for: $to");
+        $headers  = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">" . "\r\n";
+        if (mail($to, $subject, $body, $headers)) {
+            return true;
+        }
+        error_log("PHP mail() fallback also failed for: $to");
+        return false;
     }
 
     $mail = new PHPMailer(true);
@@ -119,7 +143,15 @@ function send_mail_phpmailer($to, $subject, $body) {
         return $mail->send();
 
     } catch (\Throwable $e) {
-        error_log("PHPMailer Error: {$mail->ErrorInfo}");
-        return true; // Return true to allow registration to continue even if email fails
+        error_log("PHPMailer Exception: " . $e->getMessage() . " | PHPMailer Info: {$mail->ErrorInfo}");
+        // attempt php mail fallback before giving up
+        $headers  = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">" . "\r\n";
+        if (mail($to, $subject, $body, $headers)) {
+            error_log("PHP mail() fallback succeeded after PHPMailer exception for: $to");
+            return true;
+        }
+        return false;
     }
 }

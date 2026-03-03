@@ -58,10 +58,15 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             <p>Enter this code on the confirmation page.</p>
             <p>Best regards,<br>RentFlow Team</p>
             ";
-            send_mail($email, $subject, $body);
 
-            $msg = 'Registration successful. Please enter the confirmation code sent to your email.';
-            $show_code_form = true;
+            $email_ok = send_mail($email, $subject, $body);
+            if (!$email_ok) {
+                // don't show the code form so user knows something went wrong
+                $msg = 'Registration created, but we could not send the confirmation email. Please contact support.';
+            } else {
+                $msg = 'Registration successful. Please enter the confirmation code sent to your email.';
+                $show_code_form = true;
+            }
         }
     } elseif (isset($_POST['confirm'])) {
         $code = $_POST['code'];

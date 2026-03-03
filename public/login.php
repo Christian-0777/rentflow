@@ -113,13 +113,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </body>
                         </html>
                         ";
-                        send_mail($u['email'], 'RentFlow - 2FA Verification Code', $body);
+                        $email_ok = send_mail($u['email'], 'RentFlow - 2FA Verification Code', $body);
+                        if (!$email_ok) {
+                            $msg = 'Unable to send 2FA code via email. Please try again later or contact support.';
+                        } else {
+                            $_SESSION['2fa_required'] = true;
+                            $_SESSION['2fa_user_id'] = $u['id'];
 
-                        $_SESSION['2fa_required'] = true;
-                        $_SESSION['2fa_user_id'] = $u['id'];
-
-                        header('Location: /rentflow/public/verify_2fa.php');
-                        exit;
+                            header('Location: /rentflow/public/verify_2fa.php');
+                            exit;
+                        }
                     }
                 } else {
                     // 2FA not enabled, login normally
