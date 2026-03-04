@@ -1,0 +1,41 @@
+/* Login Page Styles - Login Specific Only */
+/* Common styles are in auth-common.css */
+
+/* Global Font */
+* {
+  font-family: Calibri, "Calibri Reguler", sans-serif;
+}
+
+/* Headings and Titles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Arial Black", Arial, sans-serif;
+  font-weight: bold;
+}
+
+/* Card Design for Login Pages */
+.login-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  margin-top: 60px;
+}
+
+/* Mobile Responsive for Login Pages */
+@media (max-width: 768px) {
+  .login-card {
+    padding: 25px;
+    margin: 15px;
+    margin-top: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 20px;
+    margin: 10px;
+  }
+}
