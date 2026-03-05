@@ -96,7 +96,7 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
           <?php foreach ($rented as $r): ?>
             <tr>
               <td><strong><?= htmlspecialchars($r['stall_no']) ?></strong></td>
-              <td><?= htmlspecialchars($r['type']) ?></td>
+              <td><?= htmlspecialchars(strtoupper($r['type'])) ?></td>
               <td><?= htmlspecialchars($r['location']) ?></td>
               <td><strong style="color: var(--primary);">₱<?= number_format($r['monthly_rent'], 2) ?></strong></td>
               <td><?= date('M d, Y', strtotime($r['lease_start'])) ?></td>
@@ -136,7 +136,7 @@ $rented = $rented->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach ($available as $s): ?>
           <tr>
             <td><strong><?= htmlspecialchars($s['stall_no']) ?></strong></td>
-            <td><?= htmlspecialchars($s['type']) ?></td>
+            <td><?= htmlspecialchars(strtoupper($s['type'])) ?></td>
             <td><?= htmlspecialchars($s['location']) ?></td>
             <td>
               <?php if ($s['picture_path']): ?>
