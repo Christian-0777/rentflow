@@ -17,8 +17,10 @@ $msg = '';
 $msg_type = '';
 
 // Function to generate device fingerprint
+// fingerprint should be stable across days so that multiple accounts
+// logging in from the same device can all be trusted
 function generateDeviceFingerprint($userAgent, $ipAddress) {
-    return hash('sha256', $userAgent . $ipAddress . date('Y-m-d'));
+    return hash('sha256', $userAgent . $ipAddress);
 }
 
 // Function to generate secure device token

@@ -24,12 +24,13 @@ $stalls = $pdo->query("
 // Upcoming payments (dues not paid yet)
 $upcoming = $pdo->query("
   SELECT s.stall_no, CONCAT(u.first_name, ' ', u.last_name) AS full_name, u.business_name, d.amount_due, d.due_date,
-         CASE WHEN d.paid=1 THEN 'Paid' ELSE 'Not Paid' END AS remarks
+         'Not Paid' AS remarks
   FROM dues d
   JOIN leases l ON d.lease_id=l.id
   JOIN stalls s ON l.stall_id=s.id
   JOIN users u ON l.tenant_id=u.id
   WHERE d.due_date>=CURDATE()
+    AND d.paid=0
   ORDER BY d.due_date ASC
   LIMIT 10
 ")->fetchAll();
@@ -124,7 +125,7 @@ $recent = $pdo->query("
     <h2>Upcoming Payments</h2>
     <table class="table">
       <thead>
-        <tr><th>Stall</th><th>Tenant</th><th>Business</th><th>Amount</th><th>Due</th><th>Remarks</th></tr>
+        <tr><th>Stall</th><th>Tenant</th><th>Business</th><th>Amount</th><th>Due</th></tr>
       </thead>
       <tbody>
         <?php foreach ($upcoming as $row): ?>
@@ -134,7 +135,6 @@ $recent = $pdo->query("
             <td><?= htmlspecialchars($row['business_name']) ?></td>
             <td>₱<?= number_format($row['amount_due'],2) ?></td>
             <td><?= htmlspecialchars($row['due_date']) ?></td>
-            <td><span class="badge"><?= htmlspecialchars($row['remarks']) ?></span></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -156,7 +156,7 @@ $recent = $pdo->query("
     <h2>Recent Payments</h2>
     <table class="table">
       <thead>
-        <tr><th>Stall</th><th>Tenant</th><th>Business</th><th>Amount</th><th>Date</th><th>Remarks</th><th>Method</th></tr>
+        <tr><th>Stall</th><th>Tenant</th><th>Business</th><th>Amount</th><th>Date</th><th>Remarks</th></tr>
       </thead>
       <tbody>
         <?php foreach ($recent as $row): ?>
@@ -167,7 +167,6 @@ $recent = $pdo->query("
             <td>₱<?= number_format($row['amount'],2) ?></td>
             <td><?= htmlspecialchars($row['payment_date']) ?></td>
             <td><?= htmlspecialchars($row['remarks']) ?></td>
-            <td><?= htmlspecialchars($row['method']) ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>

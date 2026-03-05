@@ -310,7 +310,7 @@ foreach ($availableStalls as $stall) {
             <p style="color: #999;">Application ID: <?= htmlspecialchars($app['id']) ?></p>
           </div>
           <button class="btn" onclick="openApplicationModal('<?= htmlspecialchars($app['id']) ?>')">
-            <i class="material-icons">visibility</i> View
+            <i class="material-icons">visibility</i>
           </button>
         </div>
       <?php endforeach; ?>

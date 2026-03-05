@@ -183,7 +183,9 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             
             // If trust device is checked, add to trusted devices
             if ($trust_device) {
-            $deviceFingerprint = hash('sha256', ($_SERVER['HTTP_USER_AGENT'] ?? '') . ($_SERVER['REMOTE_ADDR'] ?? '') . date('Y-m-d'));
+            // stable fingerprint (no date) so the same physical machine can
+            // be trusted by multiple accounts
+            $deviceFingerprint = hash('sha256', ($_SERVER['HTTP_USER_AGENT'] ?? '') . ($_SERVER['REMOTE_ADDR'] ?? ''));
             $deviceToken = bin2hex(random_bytes(32));
 
             // Derive a friendly device name similar to verify_2fa.php
@@ -217,17 +219,25 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             $deviceName = $browser . ' on ' . $os;
 
             // Prepare and execute with error checking so failures are logged
-            $insert = $pdo->prepare("INSERT INTO trusted_devices (user_id, device_fingerprint, device_name, device_token, user_agent, ip_address) 
+            // check for existing entry first; also tolerate duplicate-key from other users
+            $check = $pdo->prepare("SELECT id FROM trusted_devices WHERE user_id=? AND device_fingerprint=?");
+            $check->execute([$user_id, $deviceFingerprint]);
+            if (!$check->fetch()) {
+                $insert = $pdo->prepare("INSERT INTO trusted_devices (user_id, device_fingerprint, device_name, device_token, user_agent, ip_address) 
                    VALUES (?, ?, ?, ?, ?, ?)");
-            $ok = $insert->execute([
-              $user_id,
-              $deviceFingerprint,
-              $deviceName,
-              $deviceToken,
-              $ua,
-              $_SERVER['REMOTE_ADDR'] ?? null
-            ]);
-
+                $ok = $insert->execute([
+                  $user_id,
+                  $deviceFingerprint,
+                  $deviceName,
+                  $deviceToken,
+                  $ua,
+                  $_SERVER['REMOTE_ADDR'] ?? null
+                ]);
+                if (!$ok) {
+                  $err = $insert->errorInfo();
+                  error_log('trusted_devices insert failed: ' . implode(' | ', $err));
+                }
+            }
             if (!$ok) {
               $err = $insert->errorInfo();
               error_log('trusted_devices insert failed: ' . implode(' | ', $err));

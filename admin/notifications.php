@@ -172,7 +172,8 @@ function openNotificationFromEl(el) {
   
   // Check if this is a stall application notification
   if (title === 'New stall application') {
-    alert('New stall application received. Please visit the Applications page to review and process it.');
+    // Redirect to applications.php
+    window.location.href = 'applications.php';
   } else {
     openNotificationModal(id, title, message);
   }

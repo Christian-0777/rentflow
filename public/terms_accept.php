@@ -18,9 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
     $enable_2fa = isset($_POST['enable_2fa']) ? 1 : 0;
     $remember_device = isset($_POST['remember_device']) ? 1 : 0;
 
-    // Function to generate device fingerprint
+    // Function to generate device fingerprint (stable across days)
     function generateDeviceFingerprint($userAgent, $ipAddress) {
-        return hash('sha256', $userAgent . $ipAddress . date('Y-m-d'));
+        return hash('sha256', $userAgent . $ipAddress);
     }
 
     // Function to generate secure device token
