@@ -1,0 +1,205 @@
+================================================================================
+                    SENDGRID API CONFIGURATION REFERENCE
+================================================================================
+
+QUICK START - ADD TO YOUR .env FILE:
+
+SENDGRID_API_KEY=SG.your_actual_api_key_here
+MAIL_FROM=noreply@yourdomain.com
+MAIL_FROM_NAME=RentFlow Team
+
+================================================================================
+                              KEY INFORMATION
+================================================================================
+
+ACCOUNT SETUP:
+- Website: https://sendgrid.com
+- Sign Up: https://signup.sendgrid.com
+- Dashboard: https://app.sendgrid.com
+
+API KEY RETRIEVAL:
+1. Log in to SendGrid Dashboard
+2. Go to: Settings → API Keys
+3. Click: Create API Key
+4. Name: RentFlow_Production
+5. Type: Full Access (or custom)
+6. Copy the key immediately (shown only once!)
+7. Store in .env file
+
+SENDER VERIFICATION:
+- Method 1: Single Sender Authentication (development)
+  Go to: Settings → Sender Authentication → Single Sender Verification
+  
+- Method 2: Domain Authentication (production)
+  Go to: Settings → Sender Authentication → Authenticate Your Domain
+
+FROM EMAIL ADDRESS:
+- Use verified email from SendGrid
+- Example: noreply@yourdomain.com or support@yourdomain.com
+- Set in .env as: MAIL_FROM=noreply@yourdomain.com
+
+================================================================================
+                          .ENV FILE EXAMPLE
+================================================================================
+
+# SendGrid Configuration
+SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Sender Information
+MAIL_FROM=noreply@rentflow.local
+MAIL_FROM_NAME=RentFlow Team
+
+# SMTP Fallback (Gmail - Optional)
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+
+================================================================================
+                            EMAIL CATEGORIES
+================================================================================
+
+Use these categories in RentFlow for tracking:
+
+payment-notifications  →  Rent payment reminders
+application-updates    →  Tenant application status
+password-resets        →  User password reset emails
+system-alerts          →  System notifications
+lease-documents        →  Lease document delivery
+arrears-notices        →  Overdue payment notices
+receipts               →  Payment confirmation receipts
+
+================================================================================
+                         TESTING YOUR SETUP
+================================================================================
+
+1. UPDATE .env FILE:
+   SENDGRID_API_KEY=SG.your_key_here
+   MAIL_FROM=verified_email@domain.com
+   MAIL_FROM_NAME=RentFlow Team
+
+2. RESTART APACHE & XAMPP:
+   - Open XAMPP Control Panel
+   - Stop Apache (if running)
+   - Start Apache
+   - Start MySQL (if not running)
+
+3. TEST IN RENTFLOW:
+   - Perform action that sends email (password reset, etc.)
+   - Check if email is delivered
+
+4. MONITOR IN SENDGRID:
+   - Go to: Mail Send → Overview
+   - View email statistics
+   - Check for bounces or errors
+
+5. COMMAND LINE TEST (Optional):
+   cd C:\xampp\htdocs\rentflow
+   php -r "
+   require_once 'config/env.php';
+   require_once 'vendor/autoload.php';
+   use SendGrid\Mail\Mail;
+   
+   \$mail = new Mail();
+   \$mail->setFrom('noreply@rentflow.local', 'RentFlow Team');
+   \$mail->setSubject('Test Email');
+   \$mail->addTo('your-email@example.com');
+   \$mail->addContent('text/html', '<p>Test from RentFlow</p>');
+   
+   \$sendgrid = new \SendGrid(env('SENDGRID_API_KEY'));
+   \$response = \$sendgrid->send(\$mail);
+   
+   echo 'Status: ' . \$response->statusCode() . PHP_EOL;
+   "
+
+================================================================================
+                         TROUBLESHOOTING GUIDE
+================================================================================
+
+PROBLEM: "Invalid API Key"
+SOLUTION:
+- Check that SENDGRID_API_KEY is correct (starts with SG.)
+- Verify key is not truncated or has extra spaces
+- Ensure .env file is in root directory
+- Restart Apache after updating .env
+
+PROBLEM: "Invalid From Address"
+SOLUTION:
+- Email must be verified in SendGrid dashboard
+- Go to: Settings → Sender Authentication
+- Use exact email configured in SendGrid
+- Update MAIL_FROM in .env to match
+
+PROBLEM: "Email Not Received"
+SOLUTION:
+- Check SendGrid Mail Send logs for bounces
+- Verify recipient email is correct
+- Check spam/junk folder
+- Confirm domain/single sender authentication complete
+- Review error logs in XAMPP/php/logs
+
+PROBLEM: "Fallback to PHPMailer"
+SOLUTION:
+- Check error logs: error_log() in config/mailer.php
+- Verify MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD
+- For Gmail: use App Password (enable 2FA first)
+- Check SMTP credentials are correct
+
+PROBLEM: "Connection Timeout"
+SOLUTION:
+- Verify internet connection is working
+- Check if SendGrid API is accessible
+- Try: curl https://api.sendgrid.com
+- Check firewall isn't blocking SendGrid
+
+================================================================================
+                         SECURITY BEST PRACTICES
+================================================================================
+
+DO:
+✓ Store API key in .env file only
+✓ Use strong, unique passwords for SendGrid account
+✓ Enable 2FA on SendGrid account
+✓ Rotate API keys periodically (quarterly)
+✓ Use separate keys for dev and production
+✓ Review email logs regularly for suspicious activity
+✓ Keep SendGrid PHP library updated
+
+DON'T:
+✗ Commit .env file to git
+✗ Share API key in messages, emails, or chats
+✗ Hard-code API key in PHP files
+✗ Use same key across multiple environments
+✗ Store API key in database or session files
+✗ Log API keys in error messages
+✗ Use API key in client-side code
+
+================================================================================
+                            RATE LIMITS
+================================================================================
+
+Free Plan: 100 emails/day
+Pro Plan: Up to 300,000+ emails/month
+Enterprise: Custom limits
+
+Monitor usage in: Statistics → Overview
+
+================================================================================
+                         USEFUL LINKS
+================================================================================
+
+Documentation: https://docs.sendgrid.com
+PHP SDK: https://github.com/sendgrid/sendgrid-php
+API Reference: https://docs.sendgrid.com/api-reference
+Mail Send Tutorial: https://docs.sendgrid.com/for-developers/sending-email/quickstart-php
+Account Setup: https://docs.sendgrid.com/for-developers/sending-email/integrations
+
+================================================================================
+NOTES:
+- Replace "SG.xxxxxxxxxxx" with your actual API key
+- Replace "noreply@rentflow.local" with your verified sender email
+- Keep this file secure - contains sensitive configuration info
+- Update this file when rotating API keys
+
+Last Updated: January 24, 2026
+================================================================================
