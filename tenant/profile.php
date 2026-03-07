@@ -34,11 +34,10 @@ $user = $info->fetch();
 <nav class="tenant-navbar">
   <div class="tenant-navbar-content">
     <ul class="tenant-navbar-nav">
-      <li><a href="dashboard.php" class="active" title="Dashboard"><i class="material-icons">home</i><span></span></a></li>
-      <li><a href="payments.php" title="Payments"><i class="material-icons">payment</i><span></span></a></li>
-      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span></span></a></li>
+      <li><a href="home.php" title="Home"><i class="material-icons">home</i><span></span></a></li>
+      <li><a href="messages.php" title="Messages"><i class="material-icons">message</i><span></span></a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span></span></a></li>
-      <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span></span></a></li>
+      <li><a href="profile.php" title="Account"><i class="material-icons">person</i><span></span></a></li>
     </ul>
   </div>
 </nav>

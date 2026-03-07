@@ -6,7 +6,89 @@ This document tracks all minor and major changes made to the RentFlow project.
 
 ## **MAJOR CHANGES**
 
-### 1. **Payment History Modal & Arrears UX Enhancements** (Latest)
+### 1. **Tenant Authentication & Management Overhaul** (Latest)
+- **Version**: 1.6.0
+- **Status**: Implemented & Tested
+- **Description**: Complete rework of tenant login system from password-based to email+code authentication, removed signup flows, updated admin tenant management with Bootstrap tabs and modals, combined dashboard/payments into unified home page
+
+#### Key Features Added:
+
+**Tenant Login System Overhaul**
+- Replaced password/2FA login with email + 7-digit code authentication
+- Removed obsolete signup flows (forgot password, reset, verify 2FA, register, confirm, terms_accept)
+- Created `tenant_accounts` table for secure code storage with hashing
+- Updated `public/login.php` to handle new authentication flow
+- Login redirects to unified tenant home page
+
+**Admin Tenant Management Updates**
+- Enhanced `admin/tenants.php` with Bootstrap tabs:
+  - **Tenant List** tab: Search/filter by category/status, clickable arrears (opens history modal), action dropdowns
+  - **Manage Tenant** tab: Add/Edit/Terminate/Transfer/Send Message modals
+- Created API endpoints: `api/add_tenant.php`, `api/edit_tenant.php`, `api/get_tenants.php`, `api/get_tenant_details.php`
+- Professional modal styling with responsive layout and Bootstrap form controls
+
+**Unified Tenant Home Page**
+- Created `tenant/home.php` combining dashboard and payments functionality
+- Displays: upcoming payment due, total arrears, last payment with receipt modal, transaction history, arrears history
+- Removed separate `tenant/dashboard.php` and `tenant/payments.php` pages
+
+**Additional Improvements**
+- Added `tenant/messages.php` for viewing admin-tenant message threads
+- Simplified `tenant/account.php` to profile/cover photo uploads only
+- Created separate tenant assets: `public/assets/js/tenant.js` for common functions
+- Updated navigation consistency across all tenant pages to point to `home.php`
+- Applied database migration `sql/migration.sql` with new tenant_accounts table and payment method restrictions
+
+#### Files Created/Modified:
+- **Created**: `tenant/home.php`, `tenant/messages.php`, `api/add_tenant.php`, `api/edit_tenant.php`, `api/get_tenants.php`, `api/get_tenant_details.php`, `public/assets/js/tenant.js`
+- **Modified**: `public/login.php`, `admin/tenants.php`, `tenant/account.php`, `sql/migration.sql`
+- **Deleted**: `public/forgot_password.php`, `public/reset_password.php`, `public/verify_2fa.php`, `public/register.php`, `public/confirm.php`, `public/terms_accept.php`
+
+**Payment System Receipt Integration & Status Fixes**
+- Implemented receipt-based payment marking system in `admin/payments.php` with Bootstrap modals
+- Added 12-digit receipt number generation and storage in new `receipts` table
+- Fixed session variable usage (`$_SESSION['user']['id']` instead of `$_SESSION['user_id']`)
+- Corrected JavaScript data parsing for payment amounts and arrears
+- Updated tenant transaction history in `tenant/home.php` to properly display payment status even for overdue payments using due_id join
+- Integrated notifications and email sending for all payment actions (paid/partial/not paid)
+- Created receipts table in database with proper foreign key relationships
+
+#### Additional Files Created/Modified:
+- **Modified**: `admin/payments.php` (complete payment flow rework), `tenant/home.php` (transaction history query fix)
+- **Database**: Created `receipts` table with columns: `id`, `receipt_no`, `lease_id`, `payment_date`, `received_from`, `stall_no`, `business_name`, `payment_for`, `amount_paid`, `total_balance`, `status`, `created_at`
+
+#### Payment Flow Enhancements:
+- Admin can mark payments as Paid, Partial, or Not Paid using Bootstrap modals
+- Receipt generation with unique 12-digit numbers
+- Automatic notification sending to tenants
+- Email receipts with formatted HTML templates
+- Proper arrears calculation and updates for partial payments
+- Next due date creation option after payment marking
+
+#### Bug Fixes:
+- Fixed JavaScript `amountPaid.toFixed is not a function` error by adding `parseFloat()` for database decimal values
+- Corrected tenant transaction history status display for overdue payments by changing join from month/year to `due_id`
+- Resolved session variable undefined errors in payment processing
+
+✅ **Result**: Complete receipt-based payment system with proper status display in tenant transaction history, even for overdue payments.
+
+#### Security Enhancements:
+- Code-based authentication eliminates password storage risks
+- Secure code hashing with bcrypt
+- Admin-only access to tenant management APIs
+- Input validation and sanitization throughout
+
+#### User Experience Improvements:
+- Streamlined tenant login with email verification
+- Professional admin interface with tabs and modals
+- Unified home page reduces navigation complexity
+- Responsive design with Bootstrap 5.3 components
+
+✅ **Result**: Tenants now use secure email+code login, admins have enhanced management tools with professional UI, and tenant interface is simplified with unified home page.
+
+---
+
+### 2. **Payment History Modal & Arrears UX Enhancements** (Previous)
 - **Version**: 1.5.0
 - **Status**: Implemented & Tested
 - **Description**: Added clickable payment amounts that open a modal with full history, improved arrears tables with export and interactive pay flow, and updated related admin views.
@@ -575,6 +657,8 @@ $reset_link = "https://yourdomain.com/public/reset_password.php?token=" . urlenc
 
 | Version | Date       | Major Changes | Status |
 |---------|------------|---------------|--------|
+| 1.6.0   | 2026-03-07 | Tenant Authentication & Management Overhaul | Implemented |
+| 1.5.0   | 2026-02-15 | Payment History Modal & Arrears UX Enhancements | Implemented |
 | 1.4.0   | 2026-02-11 | Stall Application System & Admin Approval Workflow | Implemented |
 | 1.3.1   | 2026-01-22 | SendGrid API Integration with PHPMailer Fallback | Implemented |
 | 1.3.0   | 2026-01-18 | Stalls Management & Display Enhancement | Implemented |
@@ -655,5 +739,5 @@ For issues or feature requests, please contact the development team or open an i
 
 ---
 
-**Last Updated**: February 11, 2026  
+**Last Updated**: March 7, 2026  
 **Project**: RentFlow - Property Rental Management System

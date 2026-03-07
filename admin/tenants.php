@@ -12,19 +12,8 @@ require_role('admin');
 $availableStalls = $pdo->query("SELECT id, stall_no, type, location FROM stalls WHERE status='available' ORDER BY stall_no")->fetchAll();
 
 $search = $_GET['q'] ?? '';
-$order = $_GET['order'] ?? 'stall_no_asc';
+$category = $_GET['category'] ?? '';
 $status = $_GET['status'] ?? '';
-
-$orderSql = [
-  'stall_no_asc' => 's.stall_no ASC',
-  'stall_no_desc'=> 's.stall_no DESC',
-  'name_asc'     => 'CONCAT(u.first_name, \' \', u.last_name) ASC',
-  'name_desc'    => 'CONCAT(u.first_name, \' \', u.last_name) DESC',
-  'biz_asc'      => 'u.business_name ASC',
-  'biz_desc'     => 'u.business_name DESC',
-  'paid_asc'     => 'total_paid ASC',
-  'paid_desc'    => 'total_paid DESC',
-][$order] ?? 's.stall_no ASC';
 
 $sql = "
 SELECT u.id, s.stall_no, s.type AS stall_category, CONCAT(u.first_name, ' ', u.last_name) AS full_name, u.tenant_id, u.business_name, u.status,
@@ -48,11 +37,15 @@ if ($search) {
   $sql .= " AND (CONCAT(u.first_name, ' ', u.last_name) LIKE ? OR u.business_name LIKE ? OR s.stall_no LIKE ? OR u.tenant_id LIKE ?)";
   $params = ["%$search%","%$search%","%$search%","%$search%"];
 }
+if ($category) {
+  $sql .= " AND s.type = ?";
+  $params[] = $category;
+}
 if ($status) {
   $sql .= " AND u.status = ?";
   $params[] = $status;
 }
-$sql .= " ORDER BY $orderSql";
+$sql .= " ORDER BY s.stall_no ASC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -81,12 +74,21 @@ foreach ($rows as $r) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .prev-payments {
       cursor: pointer;
       text-decoration: underline;
     }
     .prev-payments:hover {
+      opacity: 0.8;
+    }
+    .arrears-link {
+      cursor: pointer;
+      color: #007bff;
+      text-decoration: underline;
+    }
+    .arrears-link:hover {
       opacity: 0.8;
     }
   </style>
@@ -114,83 +116,98 @@ foreach ($rows as $r) {
 <main class="content">
   <h1>Tenants</h1>
 
-  <form class="filters" method="get">
-    <input type="text" name="q" placeholder="Search name, business, stall, tenant ID" value="<?= htmlspecialchars($search) ?>">
-    <select name="order">
-      <option value="stall_no_asc">Stall No ↑</option>
-      <option value="stall_no_desc" <?= $order==='stall_no_desc'?'selected':'' ?>>Stall No ↓</option>
-      <option value="name_asc" <?= $order==='name_asc'?'selected':'' ?>>Name ↑</option>
-      <option value="name_desc" <?= $order==='name_desc'?'selected':'' ?>>Name ↓</option>
-      <option value="biz_asc" <?= $order==='biz_asc'?'selected':'' ?>>Business ↑</option>
-      <option value="biz_desc" <?= $order==='biz_desc'?'selected':'' ?>>Business ↓</option>
-      <option value="paid_asc" <?= $order==='paid_asc'?'selected':'' ?>>Total Paid ↑</option>
-      <option value="paid_desc" <?= $order==='paid_desc'?'selected':'' ?>>Total Paid ↓</option>
-    </select>
-    <select name="status">
-      <option value="">All statuses</option>
-      <option value="active" <?= $status==='active'?'selected':'' ?>>Active</option>
-      <option value="inactive" <?= $status==='inactive'?'selected':'' ?>>Inactive</option>
-      <option value="lease_ended" <?= $status==='lease_ended'?'selected':'' ?>>Lease ended</option>
-    </select>
-    <button class="btn">Apply</button>
-  </form>
+  <ul class="nav nav-tabs" id="tenantTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab" aria-controls="list" aria-selected="true">Tenant List</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage" type="button" role="tab" aria-controls="manage" aria-selected="false">Manage Tenant</button>
+    </li>
+  </ul>
 
-  <section class="actions">
-    <form action="/rentflow/api/export_csv.php" method="post">
-      <input type="hidden" name="payload" value="<?= htmlspecialchars(json_encode($exportData)) ?>">
-      <input type="hidden" name="headers" value="<?= htmlspecialchars(json_encode(['Stall No.','Category','Tenant','Business','Status','Total Paid','Total Arrears','Total Arrears Paid'])) ?>">
-      <input type="hidden" name="filename" value="tenants_list.csv">
-      <button class="btn">Export CSV</button>
-    </form>
-  </section>
+  <div class="tab-content" id="tenantTabsContent">
+    <div class="tab-pane fade show active" id="list" role="tabpanel" aria-labelledby="list-tab">
+      <form class="filters mt-3" method="get">
+        <input type="text" name="q" placeholder="Search by ID or name" value="<?= htmlspecialchars($search) ?>">
+        <select name="category">
+          <option value="">All Categories</option>
+          <option value="dry" <?= $_GET['category'] === 'dry' ? 'selected' : '' ?>>Dry</option>
+          <option value="wet" <?= $_GET['category'] === 'wet' ? 'selected' : '' ?>>Wet</option>
+          <option value="apparel" <?= $_GET['category'] === 'apparel' ? 'selected' : '' ?>>Apparel</option>
+        </select>
+        <select name="status">
+          <option value="">All statuses</option>
+          <option value="active" <?= $status==='active'?'selected':'' ?>>Active</option>
+          <option value="inactive" <?= $status==='inactive'?'selected':'' ?>>Inactive</option>
+          <option value="lease_ended" <?= $status==='lease_ended'?'selected':'' ?>>Lease ended</option>
+        </select>
+        <button class="btn">Search</button>
+      </form>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Stall No.</th><th>Category</th><th>Tenant</th><th>Business</th><th>Status</th><th>Total Paid</th><th>Total Arrears</th><th>Total Arrears Paid</th><th>Previous Payments</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php foreach ($rows as $r): ?>
-        <tr>
-          <td><?= htmlspecialchars($r['stall_no']) ?></td>
-          <td><strong><?= strtoupper(htmlspecialchars($r['stall_category'])) ?></strong></td>
-          <td><a href="tenant_profile.php?id=<?= $r['id'] ?>"><?= htmlspecialchars($r['full_name']) ?> (<?= htmlspecialchars($r['tenant_id']) ?>)</a></td>
-          <td><?= htmlspecialchars($r['business_name']) ?></td>
-          <td><span class="badge"><?= htmlspecialchars(strtoupper($r['status'])) ?></span></td>
-          <td>₱<?= number_format($r['total_paid'],2) ?></td>
-          <td>₱<?= number_format($r['total_arrears'],2) ?></td>
-          <td><?php
-                if ($r['total_arrears_paid'] > 0) {
-                    echo '₱' . number_format($r['total_arrears_paid'],2);
-                } else {
-                    echo "There's no arrears to this person";
-                }
-            ?></td>
-          <td>
-            <span class="prev-payments" onclick="showPaymentsHistory(<?= $r['lease_id'] ?>)">
-            <?php
-              $pp = $pdo->prepare("SELECT payment_date, amount FROM payments WHERE lease_id=? ORDER BY payment_date DESC LIMIT 3");
-              $pp->execute([$r['lease_id']]);
-              foreach ($pp as $p) {
-                echo "<div>".htmlspecialchars($p['payment_date'])." — ₱".number_format($p['amount'],2)."</div>";
-              }
-            ?>
-            </span>
-          </td>
-          <td>
-            <select onchange="handleTenantAction(this.value, <?= $r['id'] ?>)">
-              <option value="">Select Action</option>
-              <option value="terminate">Terminate</option>
-              <option value="transfer">Transfer</option>
-              <option value="update_documents">Update Documents</option>
-              <option value="send_message">Send Message</option>
-            </select>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
+      <section class="actions mt-3">
+        <form action="/rentflow/api/export_csv.php" method="post">
+          <input type="hidden" name="payload" value="<?= htmlspecialchars(json_encode($exportData)) ?>">
+          <input type="hidden" name="headers" value="<?= htmlspecialchars(json_encode(['Stall No.','Category','Tenant','Business','Status','Total Paid','Total Arrears','Total Arrears Paid'])) ?>">
+          <input type="hidden" name="filename" value="tenants_list.csv">
+          <button class="btn">Export CSV</button>
+        </form>
+      </section>
+
+      <table class="table mt-3">
+        <thead>
+          <tr>
+            <th>Stall No.</th><th>Category</th><th>Tenant Name</th><th>Business Name</th><th>Status</th><th>Total Paid</th><th>Total Arrears</th><th>Total Arrears Paid</th><th>Previous Payments</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($rows as $r): ?>
+            <tr>
+              <td><?= htmlspecialchars($r['stall_no']) ?></td>
+              <td><strong><?= strtoupper(htmlspecialchars($r['stall_category'])) ?></strong></td>
+              <td><a href="tenant_profile.php?id=<?= $r['id'] ?>"><?= htmlspecialchars($r['full_name']) ?> (<?= htmlspecialchars($r['tenant_id']) ?>)</a></td>
+              <td><?= htmlspecialchars($r['business_name']) ?></td>
+              <td><span class="badge bg-<?= $r['status'] === 'active' ? 'success' : ($r['status'] === 'inactive' ? 'warning' : 'secondary') ?>"><?= htmlspecialchars(strtoupper($r['status'])) ?></span></td>
+              <td>₱<?= number_format($r['total_paid'],2) ?></td>
+              <td><span class="arrears-link" onclick="showArrearsHistory(<?= $r['lease_id'] ?>)">₱<?= number_format($r['total_arrears'],2) ?></span></td>
+              <td><?php
+                    if ($r['total_arrears_paid'] > 0) {
+                        echo '₱' . number_format($r['total_arrears_paid'],2);
+                    } else {
+                        echo "None";
+                    }
+                ?></td>
+              <td>
+                <span class="prev-payments" onclick="showPaymentsHistory(<?= $r['lease_id'] ?>)">
+                <?php
+                  $pp = $pdo->prepare("SELECT payment_date, amount FROM payments WHERE lease_id=? ORDER BY payment_date DESC LIMIT 3");
+                  $pp->execute([$r['lease_id']]);
+                  foreach ($pp as $p) {
+                    echo "<div>" . htmlspecialchars($p['payment_date']) . " — ₱" . number_format($p['amount'],2) . "</div>";
+                  }
+                ?>
+                </span>
+              </td>
+              <td>
+                <select onchange="handleTenantAction(this.value, <?= $r['id'] ?>)">
+                  <option value="">Select Action</option>
+                  <option value="terminate">Terminate</option>
+                  <option value="transfer">Transfer</option>
+                  <option value="send_message">Send Message</option>
+                </select>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tab-pane fade" id="manage" role="tabpanel" aria-labelledby="manage-tab">
+      <div class="mt-3">
+        <button class="btn btn-primary" onclick="openAddTenantModal()">Add Tenant</button>
+        <button class="btn btn-secondary" onclick="openEditTenantModal()">Edit Tenant</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- 🔹 Integrated Footer -->
@@ -233,33 +250,6 @@ foreach ($rows as $r) {
   </div>
 </div>
 
-<!-- Update Documents Modal -->
-<div id="updateDocsModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <span onclick="closeUpdateDocsModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
-    <h3>Update Tenant Documents</h3>
-    <form id="updateDocsForm" method="post" action="/rentflow/api/update_tenant_docs.php" enctype="multipart/form-data">
-      <input type="hidden" id="updateDocsTenantId" name="tenant_id" value="">
-      <label for="validId">Valid ID:</label><br>
-      <div id="currentValidId" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
-      <input type="file" id="validId" name="valid_id" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><br>
-      <label for="businessLogo">Business Logo:</label><br>
-      <div id="currentBusinessLogo" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
-      <input type="file" id="businessLogo" name="business_logo" accept=".png,.jpg,.jpeg,.gif,.webp"><br>
-      <label for="businessPermit">Business Permit:</label><br>
-      <div id="currentBusinessPermit" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
-      <input type="file" id="businessPermit" name="business_permit" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><br>
-      <label for="digitalSignature">Digital Signature:</label><br>
-      <div id="currentDigitalSignature" style="margin-bottom:4px;color:#555;font-size:12px;"></div>
-      <input type="file" id="digitalSignature" name="digital_signature" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><br>
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button type="submit" class="btn">Submit</button>
-        <button type="button" onclick="closeUpdateDocsModal()" class="btn">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Message Modal -->
 <div id="messageModal" class="modal" style="display: none;">
   <div class="modal-content">
@@ -275,16 +265,125 @@ foreach ($rows as $r) {
   </div>
 </div>
 
-<!-- PAYMENTS HISTORY MODAL -->
-<div id="paymentsHistoryModal" class="modal" style="display: none;">
+<!-- ARREARS HISTORY MODAL -->
+<div id="arrearsHistoryModal" class="modal" style="display: none;">
   <div class="modal-content" style="max-width:600px;">
-    <span onclick="closePaymentsHistoryModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
-    <h3>Previous Payments</h3>
-    <div id="paymentsHistoryContent" style="margin-top:15px;"></div>
+    <span onclick="closeArrearsHistoryModal()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    <h3>Arrears History</h3>
+    <div id="arrearsHistoryContent" style="margin-top:15px;"></div>
+  </div>
+</div>
+
+<!-- ADD TENANT MODAL -->
+<div id="addTenantModal" class="modal fade" tabindex="-1" aria-labelledby="addTenantModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addTenantModalLabel">Add New Tenant</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addTenantForm">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="addName" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="addName" name="name" placeholder="Enter full name" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="addBusinessName" class="form-label">Business Name</label>
+              <input type="text" class="form-control" id="addBusinessName" name="business_name" placeholder="Enter business name" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="addEmail" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="addEmail" name="email" placeholder="Enter email address" required>
+          </div>
+          <div class="mb-3">
+            <label for="addStallSelect" class="form-label">Select Stall</label>
+            <select class="form-select" id="addStallSelect" name="stall_id" required>
+              <option value="">-- Choose a stall --</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="addLeaseStart" class="form-label">Lease Start Date</label>
+              <input type="date" class="form-control" id="addLeaseStart" name="lease_start" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="addLeaseEnd" class="form-label">Lease End Date</label>
+              <input type="date" class="form-control" id="addLeaseEnd" name="lease_end" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="addMonthlyRent" class="form-label">Monthly Rent (₱)</label>
+            <input type="number" class="form-control" id="addMonthlyRent" name="monthly_rent" step="0.01" placeholder="0.00" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="addTenantForm" class="btn btn-primary">Add Tenant</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TENANT MODAL -->
+<div id="editTenantModal" class="modal fade" tabindex="-1" aria-labelledby="editTenantModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editTenantModalLabel">Edit Tenant</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editTenantForm">
+          <div class="mb-3">
+            <label for="editTenantSelect" class="form-label">Select Tenant</label>
+            <select class="form-select" id="editTenantSelect" name="tenant_id" required onchange="loadTenantData()">
+              <option value="">-- Choose a tenant --</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="editName" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="editName" name="name" placeholder="Enter full name" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="editBusinessName" class="form-label">Business Name</label>
+              <input type="text" class="form-control" id="editBusinessName" name="business_name" placeholder="Enter business name" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="editEmail" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="editEmail" name="email" placeholder="Enter email address" required>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="editLeaseStart" class="form-label">Lease Start Date</label>
+              <input type="date" class="form-control" id="editLeaseStart" name="lease_start" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="editLeaseEnd" class="form-label">Lease End Date</label>
+              <input type="date" class="form-control" id="editLeaseEnd" name="lease_end" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="editRent" class="form-label">Monthly Rent (₱)</label>
+            <input type="number" class="form-control" id="editRent" name="monthly_rent" step="0.01" placeholder="0.00" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="editTenantForm" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script src="/rentflow/public/assets/js/table.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // make availableStalls array available to JS
 const availableStalls = <?= json_encode($availableStalls) ?>;
@@ -294,8 +393,6 @@ function handleTenantAction(action, tenantId) {
     openTerminateModal(tenantId);
   } else if (action === 'transfer') {
     openTransferModal(tenantId);
-  } else if (action === 'update_documents') {
-    openUpdateDocsModal(tenantId);
   } else if (action === 'send_message') {
     window.location.href = 'messages.php?tenant=' + tenantId;
   }
@@ -366,13 +463,9 @@ function openUpdateDocsModal(tenantId) {
   document.getElementById('updateDocsModal').style.display = 'block';
 }
 
-function closeUpdateDocsModal() {
-  document.getElementById('updateDocsModal').style.display = 'none';
-}
-
 // Close any modal when clicking outside
 document.addEventListener('click', function(event) {
-  ['messageModal','terminateModal','transferModal','updateDocsModal','paymentsHistoryModal'].forEach(id => {
+  ['messageModal','terminateModal','transferModal','paymentsHistoryModal','arrearsHistoryModal'].forEach(id => {
     const modal = document.getElementById(id);
     if (modal && event.target == modal) {
       modal.style.display = 'none';
@@ -409,24 +502,6 @@ transferForm.addEventListener('submit', function(e) {
       if (data.success) {
         alert('Tenant transferred successfully');
         window.location.reload();
-      } else {
-        alert('Error: ' + (data.error||'Unknown'));
-      }
-    })
-    .catch(err => alert('Request failed: ' + err.message));
-});
-
-// Update documents form
-const updateDocsForm = document.getElementById('updateDocsForm');
-updateDocsForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  const formData = new FormData(this);
-  fetch('/rentflow/api/update_tenant_docs.php', { method: 'POST', body: formData })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert('Documents updated successfully');
-        closeUpdateDocsModal();
       } else {
         alert('Error: ' + (data.error||'Unknown'));
       }
@@ -476,6 +551,137 @@ function showPaymentsHistory(leaseId) {
 function closePaymentsHistoryModal() {
     document.getElementById('paymentsHistoryModal').style.display = 'none';
 }
+
+// ============================================================
+// ARREARS HISTORY MODAL FUNCTIONS
+// ============================================================
+function showArrearsHistory(leaseId) {
+    const modal = document.getElementById('arrearsHistoryModal');
+    const content = document.getElementById('arrearsHistoryContent');
+    content.innerHTML = '<p>Loading...</p>';
+    modal.style.display = 'block';
+
+    fetch('/rentflow/api/arrears_history.php?lease_id=' + leaseId, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            content.innerHTML = '<p style="color: #d9534f;">Error: ' + htmlEscape(data.error) + '</p>';
+            return;
+        }
+        if (data.history && data.history.length > 0) {
+            let html = '<table class="table" style="margin-top:15px;"><thead><tr><th>Date</th><th>Amount</th><th>Type</th></tr></thead><tbody>';
+            data.history.forEach(a => {
+                html += '<tr>' +
+                        '<td>' + htmlEscape(a.date) + '</td>' +
+                        '<td>₱' + parseFloat(a.amount).toFixed(2) + '</td>' +
+                        '<td>' + htmlEscape(a.type) + '</td>' +
+                        '</tr>';
+            });
+            html += '</tbody></table>';
+            content.innerHTML = html;
+        } else {
+            content.innerHTML = '<p>No arrears history found.</p>';
+        }
+    })
+    .catch(err => {
+        content.innerHTML = '<p style="color: #d9534f;">Error loading history: ' + htmlEscape(err.message) + '</p>';
+    });
+}
+
+function closeArrearsHistoryModal() {
+    document.getElementById('arrearsHistoryModal').style.display = 'none';
+}
+
+// ============================================================
+// ADD TENANT MODAL FUNCTIONS
+// ============================================================
+function openAddTenantModal() {
+    const select = document.getElementById('addStallSelect');
+    select.innerHTML = '<option value="">-- Choose a stall --</option>';
+    availableStalls.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.stall_no} - ${s.type.toUpperCase()} (${s.location})`;
+        select.appendChild(opt);
+    });
+    const modal = new bootstrap.Modal(document.getElementById('addTenantModal'));
+    modal.show();
+}
+
+// ============================================================
+// EDIT TENANT MODAL FUNCTIONS
+// ============================================================
+function openEditTenantModal() {
+    // Load tenant list
+    fetch('/rentflow/api/get_tenants.php')
+    .then(res => res.json())
+    .then(data => {
+        const select = document.getElementById('editTenantSelect');
+        select.innerHTML = '<option value="">-- Choose a tenant --</option>';
+        data.tenants.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = `${t.first_name} ${t.last_name} (${t.business_name})`;
+            select.appendChild(opt);
+        });
+        const modal = new bootstrap.Modal(document.getElementById('editTenantModal'));
+        modal.show();
+    });
+}
+
+function loadTenantData() {
+    const tenantId = document.getElementById('editTenantSelect').value;
+    if (!tenantId) return;
+    
+    fetch('/rentflow/api/get_tenant_details.php?tenant_id=' + tenantId)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('editName').value = data.first_name + ' ' + data.last_name;
+        document.getElementById('editBusinessName').value = data.business_name;
+        document.getElementById('editEmail').value = data.email;
+        document.getElementById('editRent').value = data.monthly_rent;
+        document.getElementById('editLeaseStart').value = data.lease_start;
+        document.getElementById('editLeaseEnd').value = data.lease_end;
+    });
+}
+
+// Add tenant form
+const addTenantForm = document.getElementById('addTenantForm');
+addTenantForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/rentflow/api/add_tenant.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Tenant added successfully');
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.error||'Unknown'));
+      }
+    })
+    .catch(err => alert('Request failed: ' + err.message));
+});
+
+// Edit tenant form
+const editTenantForm = document.getElementById('editTenantForm');
+editTenantForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/rentflow/api/edit_tenant.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Tenant updated successfully');
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.error||'Unknown'));
+      }
+    })
+    .catch(err => alert('Request failed: ' + err.message));
+});
 
 function htmlEscape(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };

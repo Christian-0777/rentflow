@@ -51,9 +51,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <nav class="tenant-navbar">
   <div class="tenant-navbar-content">
     <ul class="tenant-navbar-nav">
-      <li><a href="dashboard.php" class="active" title="Dashboard"><i class="material-icons">home</i><span></span></a></li>
-      <li><a href="payments.php" title="Payments"><i class="material-icons">payment</i><span></span></a></li>
-      <li><a href="stalls.php" title="Stalls"><i class="material-icons">storefront</i><span></span></a></li>
+      <li><a href="home.php" class="active" title="Dashboard"><i class="material-icons">home</i><span></span></a></li>
+      <li><a href="messages.php" title="Messages"><i class="material-icons">message</i><span></span></a></li>
       <li><a href="notifications.php" title="Notifications"><i class="material-icons">notifications</i><span></span></a></li>
       <li><a href="profile.php" title="Profile"><i class="material-icons">person</i><span></span></a></li>
     </ul>
@@ -89,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
-        <a href="dashboard.php" class="btn btn-secondary">Cancel</a>
+        <a href="home.php" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">
           <i class="material-icons" style="font-size: 18px;">send</i> Send Message
         </button>

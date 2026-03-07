@@ -198,6 +198,10 @@ $paid_arrears = $pdo->query(
     WHERE p.method = 'arrear_payment'
     ORDER BY p.payment_date DESC"
 )->fetchAll();
+
+// Calculate totals
+$total_unpaid_arrears = array_sum(array_column($unpaid_arrears, 'total_arrears'));
+$total_paid_arrears = array_sum(array_column($paid_arrears, 'amount'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -211,7 +215,6 @@ $paid_arrears = $pdo->query(
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf@0.10.1/dist/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
 </head>
 <body class="admin">
 
@@ -240,8 +243,7 @@ $paid_arrears = $pdo->query(
   <!-- � Full Page Export Buttons -->
   <section class="export-full-page">
     <h3>Export Full Report</h3>
-    <button class="btn" onclick="exportPageAsWord()">📄 Export as Word</button>
-    <button class="btn" onclick="exportPageAsPDF()">📑 Export as PDF</button>
+    <button class="btn" onclick="openPdfModal()">📑 Export as PDF</button>
   </section>
 
   <!-- 👥 New Tenants Section -->
@@ -393,6 +395,7 @@ $paid_arrears = $pdo->query(
     <div id="unpaid" class="tab-content active">
       <div class="table-header">
         <h3>Unpaid Arrears</h3>
+        <p class="total-summary">Total Unpaid Arrears: ₱<?= number_format($total_unpaid_arrears, 2) ?></p>
         <div class="export-buttons">
           <button class="btn small" onclick="exportTableAsExcel('unpaid_arrears_table','unpaid_arrears')">📥 Excel</button>
           <button class="btn small" onclick="exportTableAsPDF('unpaid_arrears_table','unpaid_arrears')">📄 PDF</button>
@@ -433,6 +436,7 @@ $paid_arrears = $pdo->query(
     <div id="paid" class="tab-content">
       <div class="table-header">
         <h3>Paid Arrears</h3>
+        <p class="total-summary">Total Paid Arrears: ₱<?= number_format($total_paid_arrears, 2) ?></p>
         <div class="export-buttons">
           <button class="btn small" onclick="exportTableAsExcel('paid_arrears_table','paid_arrears')">📥 Excel</button>
           <button class="btn small" onclick="exportTableAsPDF('paid_arrears_table','paid_arrears')">📄 PDF</button>
@@ -475,10 +479,20 @@ $paid_arrears = $pdo->query(
 
 </main>
 
-<!-- 🔹 Integrated Footer -->
+<!--  Integrated Footer -->
 <footer class="footer">
   <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
+
+<!-- PDF Export Modal -->
+<div id="pdfModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Report Preview</h2>
+    <div id="reportImageContainer"></div>
+    <button id="savePdfBtn" class="btn">Save as PDF</button>
+  </div>
+</div>
 
 <style>
   .export-full-page {
@@ -546,6 +560,13 @@ $paid_arrears = $pdo->query(
     margin: 0;
     font-size: 28px;
     font-weight: bold;
+  }
+
+  .total-summary {
+    margin: 5px 0 15px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #0B3C5D;
   }
 
   .export-buttons {
@@ -704,6 +725,50 @@ $paid_arrears = $pdo->query(
     .tab-content.active {
       display: block;
     }
+  }
+
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 8px;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+  }
+
+  #reportImageContainer img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
   }
 </style>
 
@@ -983,44 +1048,70 @@ $paid_arrears = $pdo->query(
       });
   }
 
-  // Export full page as Word (DOCX)
-  function exportPageAsWord() {
+  // Open PDF Modal with preview
+  function openPdfModal() {
     const element = document.querySelector('main.content');
-    const html = element.innerHTML;
-    
-    const htmlString = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>RentFlow Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { color: #0B3C5D; }
-          h2 { color: #0B3C5D; margin-top: 20px; }
-          table { border-collapse: collapse; width: 100%; margin: 10px 0; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #E6F2F8; color: #0B3C5D; }
-          .stat-card { background-color: #E6F2F8; padding: 10px; margin: 5px 0; border-radius: 4px; }
-          .badge { padding: 4px 8px; border-radius: 4px; }
-        </style>
-      </head>
-      <body>
-        <h1>RentFlow Reports & Analytics</h1>
-        <p>Generated on: ${new Date().toLocaleString()}</p>
-        ${html}
-      </body>
-      </html>
-    `;
+    if (!element) {
+      alert('Error: Could not find report content.');
+      return;
+    }
 
-    const blob = new Blob([htmlString], { type: 'application/msword' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'rentflow_report_' + new Date().toISOString().split('T')[0] + '.doc';
-    link.click();
-    window.URL.revokeObjectURL(url);
+    // Generate A4-sized image, excluding buttons
+    html2canvas(element, { 
+      scale: 2, 
+      width: 794, // A4 width at 96 DPI
+      height: 1123, // A4 height at 96 DPI
+      useCORS: true,
+      ignoreElements: function(element) {
+        // Exclude all buttons and elements with class 'btn'
+        return element.tagName === 'BUTTON' || element.classList.contains('btn') || element.classList.contains('export-buttons') || element.classList.contains('export-full-page');
+      }
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const img = document.createElement('img');
+      img.src = imgData;
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      document.getElementById('reportImageContainer').innerHTML = '';
+      document.getElementById('reportImageContainer').appendChild(img);
+      document.getElementById('pdfModal').style.display = 'block';
+    }).catch(error => {
+      console.error('Image generation error:', error);
+      alert('Error generating preview. Please try again.');
+    });
   }
+
+  // Save PDF from modal
+  document.getElementById('savePdfBtn').onclick = function() {
+    const img = document.querySelector('#reportImageContainer img');
+    if (!img) {
+      alert('No image to save.');
+      return;
+    }
+
+    const imgData = img.src;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+    pdf.save('rentflow_report_' + new Date().toISOString().split('T')[0] + '.pdf');
+  };
+
+  // Modal close functionality
+  const modal = document.getElementById('pdfModal');
+  const span = document.getElementsByClassName('close')[0];
+  span.onclick = function() {
+    modal.style.display = 'none';
+  };
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  };
 
 
 </script>

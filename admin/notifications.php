@@ -170,13 +170,8 @@ function openNotificationFromEl(el) {
   const title = decodeHTMLEntities(el.dataset.title || 'Notification');
   const message = decodeHTMLEntities(el.dataset.message || '');
   
-  // Check if this is a stall application notification
-  if (title === 'New stall application') {
-    // Redirect to applications.php
-    window.location.href = 'applications.php';
-  } else {
-    openNotificationModal(id, title, message);
-  }
+  // Open notification modal for all notifications
+  openNotificationModal(id, title, message);
 }
 
 let currentApplicationId = null;

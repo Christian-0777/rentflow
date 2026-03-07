@@ -11,3 +11,23 @@ ALTER TABLE payments
 
 -- No data transformation is strictly necessary; existing rows will have NULL due_id.
 -- Future code ensures the field is populated whenever a payment record is created from a due.
+
+-- Remove bank methods from payments table as project doesn't handle physical/digital money
+ALTER TABLE payments MODIFY COLUMN method ENUM('cash','manual','partial') NOT NULL;
+
+-- Create tenant_accounts table for new tenant login system
+CREATE TABLE tenant_accounts (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  code_hash VARCHAR(255) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Remove password-related columns from users table for tenants (keep for admins)
+-- But since role is in users, we can't easily drop columns. Instead, we'll ignore password for tenants in code.
+-- For new tenants, password_hash will be NULL.
+
+-- Remove 2FA and trusted devices tables as they are no longer needed for tenants
+DROP TABLE IF EXISTS trusted_devices;
+DROP TABLE IF EXISTS password_resets;

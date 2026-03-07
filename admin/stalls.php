@@ -93,38 +93,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])) {
     $msg = "Stall {$stallNo} updated.";
     $redirectUrl = "stalls.php";
   }
-  if ($_POST['action']==='assign') {
-    $tenantId = (int)$_POST['tenant_id'];
-    $stallNo = $_POST['stall_no'];
-    $monthlyRent = (float)$_POST['monthly_rent'];
-
-    // Get stall id
-    $stall = $pdo->prepare("SELECT id FROM stalls WHERE stall_no=?");
-    $stall->execute([$stallNo]);
-    $stallId = $stall->fetchColumn();
-
-    // Create lease
-    $l = $pdo->prepare("INSERT INTO leases (tenant_id, stall_id, lease_start, monthly_rent) VALUES (?,?,CURDATE(),?)");
-    $l->execute([$tenantId, $stallId, $monthlyRent]);
-    $leaseId = $pdo->lastInsertId();
-
-    // First due
-    $d = $pdo->prepare("INSERT INTO dues (lease_id, due_date, amount_due, paid) VALUES (?,?,?,0)");
-    $d->execute([$leaseId, date('Y-m-d', strtotime('+30 days')), $monthlyRent]);
-
-    // Arrears init
-    $pdo->prepare("INSERT INTO arrears (lease_id, total_arrears) VALUES (?,0)")->execute([$leaseId]);
-
-    // Update stall status
-    $pdo->prepare("UPDATE stalls SET status='occupied' WHERE id=?")->execute([$stallId]);
-
-    // Notification to tenant
-    $pdo->prepare("INSERT INTO notifications (sender_id, receiver_id, type, title, message) VALUES (?, ?, 'system', 'Stall Assigned', 'A stall has been assigned to you. Please check your portal.')")
-        ->execute([$_SESSION['user']['id'], $tenantId]);
-
-    $msg = "Stall {$stallNo} assigned to tenant.";
-    $redirectUrl = "stalls.php";
-  }
   
   // Redirect after POST to prevent form resubmission
   if ($redirectUrl) {
@@ -144,9 +112,6 @@ $sql.=" ORDER BY CASE WHEN status='occupied' THEN 1 ELSE 0 END, stall_no ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $stalls = $stmt->fetchAll();
-
-// Fetch available tenants (tenants without leases)
-$availableTenants = $pdo->query("SELECT id, CONCAT(first_name, ' ', last_name) AS full_name, email FROM users WHERE role='tenant' AND id NOT IN (SELECT tenant_id FROM leases)")->fetchAll();
 
 // Fetch available stalls
 $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHERE status='available' ORDER BY stall_no")->fetchAll();
@@ -183,69 +148,10 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
   <h1>Stalls</h1>
   <?php if($msg): ?><div class="alert success"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
 
-  <?php if (isset($_GET['edit'])): 
-    $editStall = $pdo->prepare("SELECT * FROM stalls WHERE stall_no=?");
-    $editStall->execute([$_GET['edit']]);
-    $stall = $editStall->fetch();
-    if ($stall): ?>
-  <section class="card">
-    <h3>Edit Stall <?= htmlspecialchars($stall['stall_no']) ?></h3>
-    <form method="post" enctype="multipart/form-data">
-      <input type="hidden" name="action" value="edit">
-      <input type="hidden" name="stall_no" value="<?= htmlspecialchars($stall['stall_no']) ?>">
-      <select name="type" required>
-        <option value="wet" <?= $stall['type']=='wet'?'selected':'' ?>>Wet</option>
-        <option value="dry" <?= $stall['type']=='dry'?'selected':'' ?>>Dry</option>
-        <option value="apparel" <?= $stall['type']=='apparel'?'selected':'' ?>>Apparel</option>
-      </select>
-      <select name="status">
-        <option value="available" <?= $stall['status']=='available'?'selected':'' ?>>Available</option>
-        <option value="occupied" <?= $stall['status']=='occupied'?'selected':'' ?>>Occupied</option>
-        <option value="maintenance" <?= $stall['status']=='maintenance'?'selected':'' ?>>Maintenance</option>
-      </select>
-      <div style="margin-top: 15px;">
-        <label for="edit_picture">Replace Picture:</label>
-        <input type="file" name="picture" id="edit_picture" accept="image/*">
-        <?php if ($stall['picture_path']): ?>
-          <p style="font-size: 12px; color: #666; margin-top: 5px;">Current picture: <img src="<?= htmlspecialchars($stall['picture_path']) ?>" alt="Current Picture" style="width: 80px; height: 80px; object-fit: cover; margin-top: 5px;"></p>
-        <?php endif; ?>
-      </div>
-      <button class="btn">Update</button>
-      <a href="stalls.php?type=<?= urlencode($type) ?>&status=<?= urlencode($status) ?>" class="btn">Cancel</a>
-    </form>
-  </section>
-  <?php endif; endif; ?>
-
   <section class="grid">
-    <div class="card">
-      <h3>Stall Applications</h3>
-      <a href="applications.php" class="btn" style="display: inline-block;">View Applications</a>
-    </div>
-
     <div class="card">
       <h3>Add stall</h3>
       <button class="btn" onclick="openAddStallModal()">Add New Stall</button>
-    </div>
-
-    <div class="card">
-      <h3>Assign Stall to Existing Tenant</h3>
-      <form method="post">
-        <input type="hidden" name="action" value="assign">
-        <select name="tenant_id" required>
-          <option value="">Select Tenant</option>
-          <?php foreach ($availableTenants as $t): ?>
-            <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['full_name']) ?> (<?= htmlspecialchars($t['email']) ?>)</option>
-          <?php endforeach; ?>
-        </select>
-        <select name="stall_no" required>
-          <option value="">Select Stall</option>
-          <?php foreach ($availableStalls as $s): ?>
-            <option value="<?= $s['stall_no'] ?>"><?= htmlspecialchars($s['stall_no']) ?> - <?= htmlspecialchars($s['type']) ?> (<?= htmlspecialchars($s['location']) ?>)</option>
-          <?php endforeach; ?>
-        </select>
-        <input name="monthly_rent" type="number" step="0.01" placeholder="Monthly Rent" required>
-        <button class="btn">Assign</button>
-      </form>
     </div>
 
     <!-- release form unchanged -->
@@ -273,7 +179,7 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
           <?php endif; ?>
         </td>
         <td>
-          <a href="?edit=<?= urlencode($s['stall_no']) ?>&type=<?= urlencode($type) ?>&status=<?= urlencode($status) ?>" class="btn small">Edit</a>
+          <button class="btn small" onclick="openEditModal('<?= htmlspecialchars($s['stall_no']) ?>', '<?= htmlspecialchars($s['type']) ?>', '<?= htmlspecialchars($s['status']) ?>', '<?= htmlspecialchars($s['picture_path'] ?? '') ?>')">Edit</button>
           <form method="post" class="inline">
             <input type="hidden" name="action" value="remove">
             <input type="hidden" name="stall_no" value="<?= $s['stall_no'] ?>">
@@ -333,6 +239,52 @@ $availableStalls = $pdo->query("SELECT stall_no, type, location FROM stalls WHER
   </div>
 </div>
 
+<!-- Edit Stall Modal -->
+<div id="editStallModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Edit Stall</h2>
+      <span onclick="closeEditStallModal()" style="font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="stall_no" id="edit_stall_no">
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Stall Type *</label>
+        <select name="type" id="edit_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+          <option value="wet">Wet</option>
+          <option value="dry">Dry</option>
+          <option value="apparel">Apparel</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Status</label>
+        <select name="status" id="edit_status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="available">Available</option>
+          <option value="occupied">Occupied</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Replace Picture</label>
+        <input type="file" name="picture" accept="image/*" style="display: block;">
+        <div id="current_picture_container" style="margin-top: 10px;">
+          <img id="current_picture" src="" alt="Current Picture" style="width: 80px; height: 80px; object-fit: cover; display: none;">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" type="button" onclick="closeEditStallModal()" style="background-color: #f0f0f0; color: #333;">Cancel</button>
+        <button class="btn" type="submit" style="background-color: #007bff; color: white;">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Image Viewer Modal -->
 <div id="imageModal" class="modal" style="display: none;">
   <div class="modal-content" style="max-width: 90%; width: auto; text-align: center;">
@@ -354,6 +306,24 @@ function closeAddStallModal() {
   document.getElementById('addStallModal').style.display = 'none';
 }
 
+function openEditModal(stallNo, type, status, picturePath) {
+  document.getElementById('edit_stall_no').value = stallNo;
+  document.getElementById('edit_type').value = type;
+  document.getElementById('edit_status').value = status;
+  const currentPic = document.getElementById('current_picture');
+  if (picturePath) {
+    currentPic.src = picturePath;
+    currentPic.style.display = 'block';
+  } else {
+    currentPic.style.display = 'none';
+  }
+  document.getElementById('editStallModal').style.display = 'block';
+}
+
+function closeEditStallModal() {
+  document.getElementById('editStallModal').style.display = 'none';
+}
+
 function openImageModal(imagePath, stallNo) {
   document.getElementById('modalImage').src = imagePath;
   document.getElementById('imageModalTitle').textContent = 'Stall ' + stallNo + ' - Original Size';
@@ -367,10 +337,14 @@ function closeImageModal() {
 // Close modals when clicking outside
 window.onclick = function(event) {
   const addStallModal = document.getElementById('addStallModal');
+  const editStallModal = document.getElementById('editStallModal');
   const imageModal = document.getElementById('imageModal');
   
   if (event.target == addStallModal) {
     closeAddStallModal();
+  }
+  if (event.target == editStallModal) {
+    closeEditStallModal();
   }
   if (event.target == imageModal) {
     closeImageModal();

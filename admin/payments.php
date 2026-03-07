@@ -15,25 +15,87 @@ require_role('admin');
 // HANDLE PAYMENT ACTIONS (Mark as Paid, Partial, Not Paid)
 // ============================================================
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
-    // guard against duplicate form submissions or browser refresh
-    $submittedToken = $_POST['form_token'] ?? '';
-    // token must match the value stored when the form was generated
-    if (empty($submittedToken) || $submittedToken !== ($_SESSION['last_payment_form'] ?? '')) {
-        // either missing or doesn't match – treat as invalid/duplicate
-        header("Location: payments.php");
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'get_receipt_data') {
+        $lease_id = (int)$_POST['lease_id'];
+        
+        // Get lease and tenant details
+        $lease_query = $pdo->prepare("
+            SELECT l.*, u.first_name, u.last_name, u.business_name, s.stall_no, 
+                   a.total_arrears
+            FROM leases l
+            JOIN users u ON l.tenant_id = u.id
+            JOIN stalls s ON l.stall_id = s.id
+            LEFT JOIN arrears a ON a.lease_id = l.id
+            WHERE l.id = ?
+        ");
+        $lease_query->execute([$lease_id]);
+        $lease_data = $lease_query->fetch();
+        
+        if (!$lease_data) {
+            echo json_encode(['success' => false, 'error' => 'Lease not found']);
+            exit;
+        }
+        
+        // Get current unpaid due
+        $current_due = $pdo->prepare("
+            SELECT id, amount_due, due_date FROM dues 
+            WHERE lease_id = ? AND paid = 0 
+            ORDER BY due_date ASC LIMIT 1
+        ");
+        $current_due->execute([$lease_id]);
+        $due_record = $current_due->fetch();
+        
+        if (!$due_record) {
+            echo json_encode(['success' => false, 'error' => 'No unpaid due found']);
+            exit;
+        }
+        
+        // Get admin name
+        $admin_query = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as admin_name FROM users WHERE id = ?");
+        $admin_query->execute([$_SESSION['user']['id']]);
+        $admin_data = $admin_query->fetch();
+        
+        echo json_encode([
+            'success' => true,
+            'lease_id' => $lease_id,
+            'due_date' => $due_record['due_date'],
+            'amount_due' => $due_record['amount_due'],
+            'total_arrears' => $lease_data['total_arrears'] ?? 0,
+            'monthly_rent' => $lease_data['monthly_rent'],
+            'admin_name' => $admin_data['admin_name'] ?? 'Admin',
+            'stall_no' => $lease_data['stall_no'],
+            'business_name' => $lease_data['business_name'],
+            'tenant_name' => $lease_data['first_name'] . ' ' . $lease_data['last_name']
+        ]);
         exit;
     }
-    // consume the token immediately so a browser back/refresh can't reuse it
-    unset($_SESSION['last_payment_form']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
 
     $action_type = $_POST['action_type'];
     $lease_id = (int)$_POST['lease_id'];
-    $next_due_date = $_POST['next_due_date'] ?? null;
-    $next_amount_due = (float)($_POST['next_amount_due'] ?? 0);
     
     try {
         $pdo->beginTransaction();
+        
+        // Get lease and tenant details
+        $lease_query = $pdo->prepare("
+            SELECT l.*, u.id as tenant_id, u.first_name, u.last_name, u.email, u.business_name, s.stall_no, 
+                   a.total_arrears
+            FROM leases l
+            JOIN users u ON l.tenant_id = u.id
+            JOIN stalls s ON l.stall_id = s.id
+            LEFT JOIN arrears a ON a.lease_id = l.id
+            WHERE l.id = ?
+        ");
+        $lease_query->execute([$lease_id]);
+        $lease_data = $lease_query->fetch();
+        
+        if (!$lease_data) {
+            throw new Exception("Lease not found");
+        }
         
         // Get current unpaid due
         $current_due = $pdo->prepare("
@@ -48,21 +110,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
             throw new Exception("No unpaid due found for this lease");
         }
         
-        if ($action_type === 'paid') {
-            // avoid duplicate full payment entry for the same lease/date and due
-            $dup = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE lease_id=? AND due_id=? AND payment_date=CURDATE() AND remarks='Full Payment'");
-            $dup->execute([$lease_id, $due_record['id']]);
-            if ($dup->fetchColumn() === 0) {
-                // Mark current due as paid
-                $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
-                
-                // Insert full payment record (store due_id)
-                $pdo->prepare("
-                    INSERT INTO payments (lease_id, due_id, amount, payment_date, method, remarks) 
-                    VALUES (?, ?, ?, CURDATE(), 'manual', 'Full Payment')
-                ")->execute([$lease_id, $due_record['id'], $due_record['amount_due']]);
-            }
+        // Get admin name
+        $admin_query = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as admin_name FROM users WHERE id = ?");
+        $admin_query->execute([$_SESSION['user']['id']]);
+        $admin_data = $admin_query->fetch();
+        $admin_name = $admin_data['admin_name'] ?? 'Admin';
         
+        // Generate 12-digit receipt number
+        $receipt_no = str_pad(mt_rand(0, 999999999999), 12, '0', STR_PAD_LEFT);
+        
+        $payment_date = date('Y-m-d');
+        $payment_for = date('F Y', strtotime($due_record['due_date'])) . ' rent';
+        $total_balance = ($lease_data['total_arrears'] ?? 0);
+        
+        if ($action_type === 'paid') {
+            // Mark current due as paid
+            $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
+            
+            // Insert full payment record
+            $pdo->prepare("
+                INSERT INTO payments (lease_id, due_id, amount, payment_date, method, remarks) 
+                VALUES (?, ?, ?, CURDATE(), 'manual', 'Full Payment')
+            ")->execute([$lease_id, $due_record['id'], $due_record['amount_due']]);
+            
+            // Insert receipt
+            $pdo->prepare("
+                INSERT INTO receipts (receipt_no, lease_id, payment_date, received_from, stall_no, business_name, payment_for, amount_paid, total_balance, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Full Payment')
+            ")->execute([
+                $receipt_no, $lease_id, $payment_date, $admin_name, $lease_data['stall_no'], 
+                $lease_data['business_name'], $payment_for, $due_record['amount_due'], $total_balance
+            ]);
+            
         } elseif ($action_type === 'partial') {
             $amount_paid = (float)($_POST['amount_paid'] ?? 0);
             
@@ -70,111 +149,166 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
                 throw new Exception("Invalid partial payment amount");
             }
             
-            // avoid duplicate partial payment for today with same due
-            $dup = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE lease_id=? AND due_id=? AND payment_date=CURDATE() AND remarks='Partial Payment'");
-            $dup->execute([$lease_id, $due_record['id']]);
-            if ($dup->fetchColumn() === 0) {
-                // Insert partial payment record (store due_id)
+            // Insert partial payment record
+            $pdo->prepare("
+                INSERT INTO payments (lease_id, due_id, amount, payment_date, method, remarks) 
+                VALUES (?, ?, ?, CURDATE(), 'partial', 'Partial Payment')
+            ")->execute([$lease_id, $due_record['id'], $amount_paid]);
+            
+            // Mark original due as paid (remainder is tracked separately as arrear entry)
+            $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
+            
+            // Add remaining to arrears
+            $remaining = $due_record['amount_due'] - $amount_paid;
+            
+            // Insert arrear entry
+            $pdo->prepare("
+                INSERT INTO arrear_entries (lease_id, due_id, amount, source, created_on) 
+                VALUES (?, ?, ?, 'partial_payment', CURDATE())
+            ")->execute([$lease_id, $due_record['id'], $remaining]);
+            
+            // Update arrears record
+            $existing_arrears = $pdo->prepare("SELECT id FROM arrears WHERE lease_id = ?");
+            $existing_arrears->execute([$lease_id]);
+            $arr = $existing_arrears->fetch();
+            
+            if ($arr) {
                 $pdo->prepare("
-                    INSERT INTO payments (lease_id, due_id, amount, payment_date, method, remarks) 
-                    VALUES (?, ?, ?, CURDATE(), 'partial', 'Partial Payment')
-                ")->execute([$lease_id, $due_record['id'], $amount_paid]);
-                
-                // Mark original due as paid (remainder is tracked separately as arrear entry)
-                $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
-                
-                // Add remaining to arrears with arrear_entries tracking
-                $remaining = $due_record['amount_due'] - $amount_paid;
-                
-                // avoid duplicate arrear entry
-                $dupEntry = $pdo->prepare("SELECT COUNT(*) FROM arrear_entries WHERE lease_id=? AND due_id=? AND source='partial_payment' AND amount=? AND DATE(created_on)=CURDATE()");
-                $dupEntry->execute([$lease_id, $due_record['id'], $remaining]);
-                if ($dupEntry->fetchColumn() === 0) {
-                    $pdo->prepare("
-                        INSERT INTO arrear_entries (lease_id, due_id, amount, source, created_on) 
-                        VALUES (?, ?, ?, 'partial_payment', CURDATE())
-                    ")->execute([$lease_id, $due_record['id'], $remaining]);
-                }
-                
-                // Update or insert arrears record
-                $existing_arrears = $pdo->prepare("SELECT id, total_arrears FROM arrears WHERE lease_id = ?");
-                $existing_arrears->execute([$lease_id]);
-                $arr = $existing_arrears->fetch();
-                
-                if ($arr) {
-                    $pdo->prepare("
-                        UPDATE arrears 
-                        SET total_arrears = total_arrears + ?, last_updated = NOW() 
-                        WHERE lease_id = ?
-                    ")->execute([$remaining, $lease_id]);
-                } else {
-                    $pdo->prepare("
-                        INSERT INTO arrears (lease_id, total_arrears, last_updated) 
-                        VALUES (?, ?, NOW())
-                    ")->execute([$lease_id, $remaining]);
-                }
+                    UPDATE arrears 
+                    SET total_arrears = total_arrears + ?, last_updated = NOW() 
+                    WHERE lease_id = ?
+                ")->execute([$remaining, $lease_id]);
+            } else {
+                $pdo->prepare("
+                    INSERT INTO arrears (lease_id, total_arrears, last_updated) 
+                    VALUES (?, ?, NOW())
+                ")->execute([$lease_id, $remaining]);
             }
-        
+            
+            // Insert receipt
+            $pdo->prepare("
+                INSERT INTO receipts (receipt_no, lease_id, payment_date, received_from, stall_no, business_name, payment_for, amount_paid, total_balance, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Partial Payment')
+            ")->execute([
+                $receipt_no, $lease_id, $payment_date, $admin_name, $lease_data['stall_no'], 
+                $lease_data['business_name'], $payment_for, $amount_paid, $total_balance + $remaining
+            ]);
+            
         } elseif ($action_type === 'notpaid') {
-            // prevent duplicate not‑paid marker for the same due
-            $dup = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE lease_id=? AND due_id=? AND payment_date=CURDATE() AND remarks='Marked as Not Paid'");
-            $dup->execute([$lease_id, $due_record['id']]);
-            if ($dup->fetchColumn() === 0) {
-                // mark the due itself as processed so it moves to history
-                $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
-
-                // Add unpaid amount to arrears with arrear_entries tracking
-                $dupEntry = $pdo->prepare("SELECT COUNT(*) FROM arrear_entries WHERE lease_id=? AND due_id=? AND source='marked_not_paid' AND amount=? AND DATE(created_on)=CURDATE()");
-                $dupEntry->execute([$lease_id, $due_record['id'], $due_record['amount_due']]);
-                if ($dupEntry->fetchColumn() === 0) {
-                    $pdo->prepare("
-                        INSERT INTO arrear_entries (lease_id, due_id, amount, source, created_on) 
-                        VALUES (?, ?, ?, 'marked_not_paid', CURDATE())
-                    ")->execute([$lease_id, $due_record['id'], $due_record['amount_due']]);
-                }
-                
-                // Insert "not paid" payment record for tracking
+            // Mark the due as processed
+            $pdo->prepare("UPDATE dues SET paid = 1 WHERE id = ?")->execute([$due_record['id']]);
+            
+            // Add amount to arrears
+            $pdo->prepare("
+                INSERT INTO arrear_entries (lease_id, due_id, amount, source, created_on) 
+                VALUES (?, ?, ?, 'marked_not_paid', CURDATE())
+            ")->execute([$lease_id, $due_record['id'], $due_record['amount_due']]);
+            
+            // Insert payment record
+            $pdo->prepare("
+                INSERT INTO payments (lease_id, due_id, amount, payment_date, method, remarks) 
+                VALUES (?, ?, 0, CURDATE(), 'manual', 'Marked as Not Paid')
+            ")->execute([$lease_id, $due_record['id']]);
+            
+            // Update arrears record
+            $existing_arrears = $pdo->prepare("SELECT id FROM arrears WHERE lease_id = ?");
+            $existing_arrears->execute([$lease_id]);
+            $arr = $existing_arrears->fetch();
+            
+            if ($arr) {
                 $pdo->prepare("
-                    INSERT INTO payments (lease_id, due_id, amount, payment_date, method, remarks) 
-                    VALUES (?, ?, 0, CURDATE(), 'manual', 'Marked as Not Paid')
-                ")->execute([$lease_id, $due_record['id']]);
-                
-                // Update or insert arrears record
-                $existing_arrears = $pdo->prepare("SELECT id, total_arrears FROM arrears WHERE lease_id = ?");
-                $existing_arrears->execute([$lease_id]);
-                $arr = $existing_arrears->fetch();
-                
-                if ($arr) {
-                    $pdo->prepare("
-                        UPDATE arrears 
-                        SET total_arrears = total_arrears + ?, last_updated = NOW() 
-                        WHERE lease_id = ?
-                    ")->execute([$due_record['amount_due'], $lease_id]);
-                } else {
-                    $pdo->prepare("
-                        INSERT INTO arrears (lease_id, total_arrears, last_updated) 
-                        VALUES (?, ?, NOW())
-                    ")->execute([$lease_id, $due_record['amount_due']]);
-                }
+                    UPDATE arrears 
+                    SET total_arrears = total_arrears + ?, last_updated = NOW() 
+                    WHERE lease_id = ?
+                ")->execute([$due_record['amount_due'], $lease_id]);
+            } else {
+                $pdo->prepare("
+                    INSERT INTO arrears (lease_id, total_arrears, last_updated) 
+                    VALUES (?, ?, NOW())
+                ")->execute([$lease_id, $due_record['amount_due']]);
             }
+            
+            // Insert receipt
+            $pdo->prepare("
+                INSERT INTO receipts (receipt_no, lease_id, payment_date, received_from, stall_no, business_name, payment_for, amount_paid, total_balance, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Not Paid')
+            ")->execute([
+                $receipt_no, $lease_id, $payment_date, $admin_name, $lease_data['stall_no'], 
+                $lease_data['business_name'], $payment_for, 0, $total_balance + $due_record['amount_due']
+            ]);
         }
         
         // Insert next due if provided
-        if ($next_due_date && $next_amount_due > 0) {
-            $pdo->prepare("
-                INSERT INTO dues (lease_id, due_date, amount_due, paid) 
-                VALUES (?, ?, ?, 0)
-            ")->execute([$lease_id, $next_due_date, $next_amount_due]);
+        if (isset($_POST['next_due_date']) && isset($_POST['next_amount_due'])) {
+            $next_due_date = $_POST['next_due_date'];
+            $next_amount_due = (float)$_POST['next_amount_due'];
+            if ($next_due_date && $next_amount_due > 0) {
+                $pdo->prepare("
+                    INSERT INTO dues (lease_id, due_date, amount_due, paid) 
+                    VALUES (?, ?, ?, 0)
+                ")->execute([$lease_id, $next_due_date, $next_amount_due]);
+            }
         }
+        
+        // Send notification to tenant
+        $notification_message = "Payment receipt generated for $payment_for. Receipt No: $receipt_no";
+        $pdo->prepare("
+            INSERT INTO notifications (sender_id, receiver_id, type, title, message) 
+            VALUES (?, ?, 'system', 'Payment Receipt', ?)
+        ")->execute([$_SESSION['user']['id'], $lease_data['tenant_id'], $notification_message]);
+        
+        // Send email to tenant
+        $email_subject = "RentFlow - Payment Receipt";
+        $email_body = "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                .header { background-color: #0B3C5D; color: white; padding: 10px; border-radius: 5px; text-align: center; }
+                .content { padding: 20px 0; }
+                .receipt-details { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2>RentFlow - Payment Receipt</h2>
+                </div>
+                <div class='content'>
+                    <p>Hello {$lease_data['first_name']} {$lease_data['last_name']},</p>
+                    <p>A payment receipt has been generated for your account:</p>
+                    <div class='receipt-details'>
+                        <p><strong>Receipt No:</strong> $receipt_no</p>
+                        <p><strong>Date:</strong> " . date('M d, Y', strtotime($payment_date)) . "</p>
+                        <p><strong>Received From:</strong> $admin_name</p>
+                        <p><strong>Stall:</strong> {$lease_data['stall_no']}</p>
+                        <p><strong>Business Name:</strong> {$lease_data['business_name']}</p>
+                        <p><strong>Payment For:</strong> $payment_for</p>
+                        <p><strong>Amount Paid:</strong> ₱" . number_format($action_type === 'paid' ? $due_record['amount_due'] : ($action_type === 'partial' ? $_POST['amount_paid'] : 0), 2) . "</p>
+                        <p><strong>Status:</strong> " . ($action_type === 'paid' ? 'Full Payment' : ($action_type === 'partial' ? 'Partial Payment' : 'Not Paid')) . "</p>
+                    </div>
+                    <p>Please keep this receipt for your records.</p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; " . date('Y') . " RentFlow. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+        
+        require_once __DIR__.'/../config/mailer.php';
+        send_mail($lease_data['email'], $email_subject, $email_body);
         
         $pdo->commit();
         
         if ($isAjax) {
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => true, 'receipt_no' => $receipt_no]);
             exit;
         } else {
-            // Redirect to refresh page
-            header("Location: payments.php?success=1");
+            header("Location: payments.php?success=1&receipt=$receipt_no");
             exit;
         }
     } catch (Exception $e) {
@@ -186,7 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
         }
     }
 }
-
+        
 // generate a one‑time token for the payment modal form to prevent double submissions
 $token = bin2hex(random_bytes(16));
 $_SESSION['last_payment_form'] = $token;
@@ -288,6 +422,7 @@ $arrears_rows = $pdo->query("
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .table tbody td {
             text-transform: uppercase;
@@ -363,7 +498,7 @@ $arrears_rows = $pdo->query("
 <main class="content">
     <?php if (isset($_GET['success'])): ?>
         <div style="background-color: #dff0d8; color: #3c763d; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
-            ✓ Payment recorded successfully!
+            ✓ Payment recorded successfully!<?php if (isset($_GET['receipt'])): ?> Receipt No: <?= htmlspecialchars($_GET['receipt']) ?><?php endif; ?>
         </div>
     <?php endif; ?>
     
@@ -535,45 +670,89 @@ $arrears_rows = $pdo->query("
     <p>&copy; <?= date('Y') ?> RentFlow. All rights reserved.</p>
 </footer>
 
-<!-- ============================================================
-     MODALS
-     ============================================================ -->
+<!-- PARTIAL PAYMENT AMOUNT MODAL -->
+<div class="modal fade" id="partialAmountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter Payment Amount</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="partialAmountInput" class="form-label">Amount Paid (₱)</label>
+                    <input type="number" class="form-control" id="partialAmountInput" step="0.01" min="0" placeholder="Enter amount paid">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="proceedToReceipt('partial')">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- PAYMENT ACTION MODAL -->
-<div id="paymentModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
-    <div style="background-color: white; margin: 10% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <span onclick="closePaymentModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
-        
-        <h3 id="modalTitle">Payment Action</h3>
-        <form method="post" id="paymentForm">
-            <input type="hidden" name="form_token" value="<?= htmlspecialchars($token) ?>">
-            <input type="hidden" name="action_type" id="actionType">
-            <input type="hidden" name="lease_id" id="leaseIdInput">
-            
-            <!-- Partial Payment Amount (shown only for partial action) -->
-            <div id="partialPaidSection" style="display: none; margin-bottom: 15px;">
-                <label for="amountPaid">Amount Paid (₱):</label>
-                <input type="number" id="amountPaid" name="amount_paid" step="0.01" min="0" placeholder="Enter amount paid" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">
+<!-- RECEIPT MODAL -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            
-            <!-- Next Payment Date -->
-            <div style="margin-bottom: 15px;">
-                <label for="nextDueDate">Next Payment Date:</label>
-                <input type="date" id="nextDueDate" name="next_due_date" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">
+            <div class="modal-body">
+                <div class="receipt-details p-4 border rounded">
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Receipt No:</strong></div>
+                        <div class="col-sm-6" id="receiptNo"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Date:</strong></div>
+                        <div class="col-sm-6" id="receiptDate"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Received From:</strong></div>
+                        <div class="col-sm-6" id="receivedFrom"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Stall:</strong></div>
+                        <div class="col-sm-6" id="stallNo"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Business Name:</strong></div>
+                        <div class="col-sm-6" id="businessName"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Payment For:</strong></div>
+                        <div class="col-sm-6" id="paymentFor"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Amount Paid:</strong></div>
+                        <div class="col-sm-6" id="amountPaid"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Total Balance:</strong></div>
+                        <div class="col-sm-6" id="totalBalance"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6"><strong>Status:</strong></div>
+                        <div class="col-sm-6" id="paymentStatus"></div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label for="nextDueDate" class="form-label">Next Payment Date (Optional)</label>
+                    <input type="date" class="form-control" id="nextDueDateInput" name="next_due_date">
+                </div>
+                <div class="mt-3">
+                    <label for="nextAmountDue" class="form-label">Next Payment Amount (Optional)</label>
+                    <input type="number" class="form-control" id="nextAmountDueInput" name="next_amount_due" step="0.01" min="0">
+                </div>
             </div>
-            
-            <!-- Next Payment Amount -->
-            <div style="margin-bottom: 15px;">
-                <label for="nextAmountDue">Next Payment Amount (₱):</label>
-                <input type="number" id="nextAmountDue" name="next_amount_due" step="0.01" min="0" required placeholder="Enter amount due" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitPayment()">Confirm Payment</button>
             </div>
-            
-            <!-- Buttons -->
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button type="submit" class="btn" style="flex: 1;">Submit</button>
-                <button type="button" onclick="closePaymentModal()" class="btn" style="flex: 1; background-color: #6c757d;">Cancel</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -643,6 +822,131 @@ function switchTab(tabName) {
 // PAYMENT MODAL FUNCTIONS
 // ============================================================
 // intercept submission for AJAX behavior
+let currentLeaseId = null;
+let currentActionType = null;
+let currentAmountPaid = 0;
+
+function openPaymentModal(action, leaseId) {
+    currentLeaseId = leaseId;
+    currentActionType = action;
+    
+    if (action === 'partial') {
+        // Show partial amount modal first
+        const modal = new bootstrap.Modal(document.getElementById('partialAmountModal'));
+        modal.show();
+    } else {
+        // For paid and notpaid, go directly to receipt
+        proceedToReceipt(action);
+    }
+}
+
+function proceedToReceipt(action) {
+    if (action === 'partial') {
+        currentAmountPaid = parseFloat(document.getElementById('partialAmountInput').value) || 0;
+        if (currentAmountPaid <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        // Close partial modal
+        bootstrap.Modal.getInstance(document.getElementById('partialAmountModal')).hide();
+    }
+    
+    // Fetch lease data and show receipt modal
+    fetch('', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'action=get_receipt_data&lease_id=' + currentLeaseId
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            populateReceiptModal(data, action);
+            const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
+            modal.show();
+        } else {
+            alert('Error: ' + (data.error || 'unknown'));
+        }
+    })
+    .catch(err => alert('Network error: ' + err.message));
+}
+
+function populateReceiptModal(data, action) {
+    const receiptNo = ('000000000000' + Math.floor(Math.random() * 1000000000000)).slice(-12);
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const paymentFor = new Date(data.due_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' rent';
+    
+    let amountPaid = 0;
+    let status = '';
+    let totalBalance = parseFloat(data.total_arrears || 0);
+    
+    if (action === 'paid') {
+        amountPaid = parseFloat(data.amount_due);
+        status = 'Full Payment';
+    } else if (action === 'partial') {
+        amountPaid = currentAmountPaid;
+        status = 'Partial Payment';
+        totalBalance += (parseFloat(data.amount_due) - currentAmountPaid);
+    } else if (action === 'notpaid') {
+        amountPaid = 0;
+        status = 'Not Paid';
+        totalBalance += parseFloat(data.amount_due);
+    }
+    
+    document.getElementById('receiptNo').textContent = receiptNo;
+    document.getElementById('receiptDate').textContent = today;
+    document.getElementById('receivedFrom').textContent = data.admin_name;
+    document.getElementById('stallNo').textContent = data.stall_no;
+    document.getElementById('businessName').textContent = data.business_name;
+    document.getElementById('paymentFor').textContent = paymentFor;
+    document.getElementById('amountPaid').textContent = '₱' + amountPaid.toFixed(2);
+    document.getElementById('totalBalance').textContent = '₱' + totalBalance.toFixed(2);
+    document.getElementById('paymentStatus').textContent = status;
+    
+    // Set next month as default due date
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    document.getElementById('nextDueDateInput').value = nextMonth.toISOString().split('T')[0];
+    document.getElementById('nextAmountDueInput').value = data.monthly_rent || '';
+}
+
+function submitPayment() {
+    const nextDueDate = document.getElementById('nextDueDateInput').value;
+    const nextAmountDue = document.getElementById('nextAmountDueInput').value;
+    
+    const formData = new FormData();
+    formData.append('form_token', '<?= htmlspecialchars($token) ?>');
+    formData.append('action_type', currentActionType);
+    formData.append('lease_id', currentLeaseId);
+    if (currentActionType === 'partial') {
+        formData.append('amount_paid', currentAmountPaid);
+    }
+    if (nextDueDate) {
+        formData.append('next_due_date', nextDueDate);
+    }
+    if (nextAmountDue) {
+        formData.append('next_amount_due', nextAmountDue);
+    }
+    
+    fetch('', {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        body: formData
+    })
+    .then(r => r.json())
+    .then(json => {
+        if (json.success) {
+            bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (json.error || 'unknown'));
+        }
+    })
+    .catch(err => alert('Network error: ' + err.message));
+}
+
 document.getElementById('paymentForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const form = e.target;
@@ -664,7 +968,7 @@ document.getElementById('paymentForm').addEventListener('submit', function(e) {
     .catch(err => alert('Network error: ' + err.message));
 });
 
-function openPaymentModal(action, leaseId) {
+function openPaymentModal_old(action, leaseId) {
     if (!action) return;
     
     const modal = document.getElementById('paymentModal');
@@ -845,5 +1149,6 @@ window.onclick = function(event) {
     }
 };
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
