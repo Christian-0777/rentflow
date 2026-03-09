@@ -44,7 +44,7 @@ $user = $info->fetch();
 
 <main class="tenant-content">
   <div class="profile-header">
-    <div class="profile-cover" style="background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+    <div class="profile-cover" style="background-image: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);"></div>
     <div class="profile-info">
       <div style="width: 160px; height: 160px; border-radius: 50%; background: var(--light); border: 4px solid var(--white); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
         <i class="material-icons" style="font-size: 80px; color: var(--primary);">account_circle</i>
@@ -103,7 +103,7 @@ $user = $info->fetch();
   </div>
 
   <!-- Chat with Admin Button -->
-  <div class="tenant-card" style="margin-top: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+  <div class="tenant-card" style="margin-top: 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; text-align: center;">
     <i class="material-icons" style="font-size: 48px; display: block; margin-bottom: 12px;">chat</i>
     <h3 style="margin-bottom: 12px; color: white;">Need Help?</h3>
     <p style="margin-bottom: 16px; color: rgba(255,255,255,0.9);">Send a message to our support team for any questions or concerns.</p>

@@ -3,17 +3,27 @@
    ========================================================================== */
 
 :root {
-  --primary-blue: #667eea;
-  --primary-dark: #764ba2;
-  --sent-bg: #667eea;
-  --received-bg: #e5e5ea;
-  --sent-text: #ffffff;
-  --received-text: #000000;
-  --border-light: #e0e0e0;
-  --hover-bg: #f5f5f5;
-  --white: #ffffff;
+  --primary: #0B3C5D;
+  --primary-dark: #082a42;
+  --primary-light: #e6f2f8;
+  --golden: #F2B705;
+  --secondary: #6B7280;
+  --success: #1F7A1F;
+  --danger: #8B1E1E;
+  --warning: #F2B705;
+  --light: #f8f9fa;
+  --white: #fff;
+  --dark: #050505;
+  --border: #ddd;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.15);
+  --sent-bg: var(--primary);
+  --received-bg: var(--light);
+  --sent-text: var(--white);
+  --received-text: var(--dark);
+  --border-light: var(--border);
+  --hover-bg: var(--light);
 }
 
 /* ===== Main Container ===== */

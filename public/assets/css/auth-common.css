@@ -6,6 +6,24 @@
   font-family: Calibri, "Calibri Reguler", sans-serif;
 }
 
+:root {
+  --primary: #0B3C5D;
+  --primary-dark: #082a42;
+  --primary-light: #e6f2f8;
+  --golden: #F2B705;
+  --secondary: #6B7280;
+  --success: #1F7A1F;
+  --danger: #8B1E1E;
+  --warning: #F2B705;
+  --light: #f8f9fa;
+  --white: #fff;
+  --dark: #050505;
+  --border: #ddd;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
 /* Headings and Titles */
 h1, h2, h3, h4, h5, h6 {
   font-family: "Arial Black", Arial, sans-serif;
@@ -36,14 +54,14 @@ body.public main.content h1,
 body.admin main.content h1 {
   text-align: center;
   margin-bottom: 10px;
-  color: #0B3C5D;
+  color: var(--primary);
   font-size: 28px;
 }
 
 body.public main.content h2,
 body.admin main.content h2 {
   text-align: center;
-  color: #0B3C5D;
+  color: var(--primary);
   font-size: 20px;
   margin-bottom: 15px;
 }
@@ -61,7 +79,7 @@ body.public main.content select,
 body.admin main.content select {
   padding: 12px;
   margin-bottom: 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
   width: 100%;
@@ -74,7 +92,7 @@ body.admin main.content input:focus,
 body.public main.content select:focus,
 body.admin main.content select:focus {
   outline: none;
-  border-color: #0B3C5D;
+  border-color: var(--primary);
   box-shadow: 0 0 6px rgba(11, 60, 93, 0.2);
 }
 
@@ -83,7 +101,7 @@ body.public main.content button,
 body.admin main.content button {
   padding: 12px 20px;
   margin-top: 10px;
-  background-color: #0B3C5D;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 6px;
@@ -97,7 +115,7 @@ body.admin main.content button {
 /* Button Hover State */
 body.public main.content button:hover,
 body.admin main.content button:hover {
-  background-color: #083051;
+  background-color: var(--primary-dark);
 }
 
 /* Paragraphs */
@@ -106,13 +124,13 @@ body.admin main.content p {
   text-align: center;
   margin-top: 20px;
   font-size: 14px;
-  color: #666;
+  color: var(--secondary);
 }
 
 /* Links in Paragraphs */
 body.public main.content p a,
 body.admin main.content p a {
-  color: #0B3C5D;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -125,7 +143,7 @@ body.admin main.content p a:hover {
 /* Centered Container */
 main.content > form,
 main.content > .card-container {
-  background-color: #fff;
+  background-color: var(--white);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   padding: 40px;

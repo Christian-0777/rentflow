@@ -119,15 +119,15 @@ $notification = $latestNotif->fetch(PDO::FETCH_ASSOC);
   </div>
 
   <?php if ($notification): ?>
-    <div class="alert alert-info" style="border-left: 4px solid #0d6efd;">
+    <div class="alert alert-info" style="border-left: 4px solid var(--primary);">
       <div style="display: flex; gap: 12px; align-items: flex-start;">
-        <i class="material-icons" style="color: #0d6efd; margin-top: 2px;">notifications_active</i>
+        <i class="material-icons" style="color: var(--primary); margin-top: 2px;">notifications_active</i>
         <div style="flex: 1;">
           <?php if ($notification['title']): ?>
             <strong><?= htmlspecialchars($notification['title']) ?></strong><br>
           <?php endif; ?>
           <p style="margin: 4px 0 0 0; font-size: 14px;"><?= htmlspecialchars($notification['message']) ?></p>
-          <small style="color: #6c757d;">
+          <small style="color: var(--secondary);">
             <?= htmlspecialchars($notification['sender_name'] ?? 'System') ?> • 
             <?= htmlspecialchars(date('M d, Y h:i A', strtotime($notification['created_at']))) ?>
           </small>

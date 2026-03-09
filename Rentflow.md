@@ -44,22 +44,18 @@
 ### User Workflow
 
 1. **Public Access** → New users visit `/public/index.php` (public landing page)
-2. **Registration** → Users register as **Admin** or **Tenant** via `/public/register.php`
+2. **Registration** → Users register as **Admin** via `/admin/register.php` or **Tenant** via `/admin/tenants.php` (Add Tenant modal)
 3. **Login** → Users authenticate via `/public/login.php` with email and password
-4. **2FA Verification** → Two-factor authentication via `/public/verify_2fa.php`
-5. **Role-Based Dashboard** → Redirected to role-specific dashboard:
+4. **Role-Based Dashboard** → Redirected to role-specific dashboard:
    - Admins → `/admin/dashboard.php`
-   - Tenants → `/tenant/dashboard.php`
+   - Tenants → `/tenant/home.php`
 
 
 ```
 Public Access:
 ├── /public/index.php (landing page)
-├── /public/register.php (user registration)
 ├── /public/login.php (authentication)
-├── /public/verify_2fa.php (two-factor auth)
-├── /public/forgot_password.php (password recovery)
-└── /public/reset_password.php (password reset)
+└── /public/logout.php (logout)
 
 Authenticated Access (based on role):
 ├── Admin Portal: /admin/*
@@ -98,9 +94,8 @@ Authenticated Access (based on role):
 - Manage personal profile and account settings
 
 **Tenant Pages:**
-- `/tenant/dashboard.php` - Personal overview (next payment, arrears, latest notification)
-- `/tenant/payments.php` - Payment history and upcoming dues
-- `/tenant/stalls.php` - Apply for available stalls
+- `/tenant/home.php` - Unified dashboard with overview, payments, and transaction history
+- `/tenant/messages.php` - Chat interface with admin
 - `/tenant/notifications.php` - Messages and notifications from admin
 - `/tenant/profile.php` - Personal profile with chat modal
 - `/tenant/account.php` - Account settings
@@ -158,10 +153,10 @@ Authenticated Access (based on role):
 ---
 
 #### `/admin/payments.php`
-**Purpose**: Payment management with two-tab interface
+**Purpose**: Payment management with receipt-based system and two-tab interface
 
 **Tab 1: Payments Tab**
-Displays all leases with payment tracking:
+Displays all leases with payment tracking and receipt generation:
 
 | Data | Details |
 |------|---------|
@@ -170,14 +165,15 @@ Displays all leases with payment tracking:
 | Business | Business name |
 | Previous Payment | Last payment date & amount |
 | Previous Status | Full/Partial/Not Paid |
+| Total Arrears Paid | Cumulative arrears payments |
 | Next Payment | Due date & amount |
 | Next Status | Overdue/Pending/Paid (color-coded) |
 | Actions | Message button + dropdown |
 
 **Action Dropdown:**
-- ✅ **Mark as Paid** - Modal to record full payment
-- 📊 **Mark as Partial Paid** - Modal for partial payment with arrear calculation
-- ❌ **Mark as Not Paid** - Trigger arrear calculation with penalty
+- ✅ **Mark as Paid** - Opens Bootstrap modal for full payment with receipt generation
+- 📊 **Mark as Partial Paid** - Opens modal for partial payment amount input
+- ❌ **Mark as Not Paid** - Opens modal for marking as not paid with receipt
 
 **Tab 2: Arrears Tab**
 Displays only leases with outstanding balances:
@@ -188,22 +184,30 @@ Displays only leases with outstanding balances:
 | Tenant | Tenant name |
 | Business | Business name |
 | Previous Arrears | Sum of unpaid amounts (clickable) |
-| Current Penalties | 2% penalty from current period |
+| Days Since Arrears | Days since first arrear entry |
 | Total Arrears | Total outstanding balance |
-| Actions | Message button |
+| Actions | Message button + Pay button |
 
-**Action Modals:**
+**Bootstrap Modals:**
 
-1. **Mark as Paid Modal**
-   - Next Payment Date (date picker)
-   - Next Payment Amount (currency input)
-   - Submit to create payment record
+1. **Partial Payment Amount Modal**
+   - Amount Paid input field
+   - Next button to proceed to receipt modal
 
-2. **Mark as Partial Paid Modal**
-   - Amount Paid (currency input)
-   - Next Payment Date (date picker)
-   - Next Payment Amount (currency input)
-   - Auto-calculates remaining as arrear
+2. **Payment Receipt Modal**
+   - Displays receipt details: Receipt No, Date, Received From, Stall, Business Name, Payment For, Amount Paid, Total Balance, Status
+   - Optional Next Payment Date and Amount fields
+   - Confirm Payment button to process and generate receipt
+
+**Key Features:**
+- 12-digit unique receipt number generation
+- Receipt storage in dedicated receipts table
+- Automatic notification sending to tenants
+- Email receipts with HTML formatting
+- Proper arrears calculation for partial payments
+- Session-based security with token validation
+- AJAX processing with JSON responses
+- Bootstrap 5.3 modal styling
 
 ---
 
@@ -353,29 +357,88 @@ Inspired by Facebook Messenger with two-panel layout:
 
 ### **Tenant Pages**
 
-#### `/tenant/dashboard.php`
-**Purpose**: Personal tenant overview and quick links
+#### `/tenant/home.php`
+**Purpose**: Unified tenant dashboard combining overview, payments, and transaction history
 
 **Displays:**
 - Welcome message with first name
 - **Latest Notification Block** - Most recent admin message/alert
 - **Payment Overview Cards:**
   - Next Payment (amount and due date)
-  - Last Payment (date and amount)
+  - Last Payment (date and amount with receipt modal)
   - Total Arrears (outstanding balance)
+- **Transaction History Table:**
+  - Date, Total Amount, Amount Paid, Status (Paid/Partial/Not Paid), Transaction ID
+  - Status correctly displays even for overdue payments using due_id join
+- **Arrears History** - Penalty and overdue tracking
 - **Quick Links** - Navigation to key sections
 - **Notification Alert** - If admin has sent new messages
 
+**Key Features:**
+- Combined dashboard and payments functionality
+- Accurate payment status display for all scenarios
+- Receipt modal for viewing payment details
+- Real-time data from database
+- Responsive design for mobile/desktop
+
 ---
 
-#### `/tenant/payments.php`
-**Purpose**: Detailed payment history and upcoming dues
+#### `/tenant/messages.php`
+**Purpose**: Messenger-style chat interface with admin
 
-**Tabs/Sections:**
-- **Upcoming Dues** - Next payments with status
-- **Payment History** - Full payment record with dates, amounts, methods
-- **Arrears History** - Tracking of penalties and overdue amounts
-- **Download Options** - Receipt downloads, payment records export
+**Design:** Facebook Messenger-inspired two-panel layout:
+
+**Left Panel:** Conversation list with search
+**Center Panel:** Full message thread with real-time updates
+
+**Features:**
+- Message polling for new messages
+- Send messages to admin
+- Message history display
+- Responsive design
+
+---
+
+#### `/tenant/notifications.php`
+**Purpose**: Inbox of messages and notifications
+
+**Displays:**
+- All notifications from admin
+- Date, sender name, message content
+- Message status (read/unread)
+- Delete/archive options
+
+---
+
+#### `/tenant/profile.php`
+**Purpose**: Personal profile and chat
+
+**Sections:**
+- Profile information (name, email, phone, business details)
+- Edit profile functionality
+- **Chat Modal** - "Chat with Admin" button
+- Messages sent appear in admin interface
+
+---
+
+#### `/tenant/account.php`
+**Purpose**: Account settings and security
+
+**Features:**
+- Update email address
+- Change password
+- Update profile information
+- View account activity
+
+---
+
+#### `/tenant/support.php`
+**Purpose**: Help desk and support information
+
+**Content:**
+- FAQ section
+- Support contact information
+- Troubleshooting guides
 
 ---
 
@@ -386,19 +449,22 @@ Inspired by Facebook Messenger with two-panel layout:
 1. Click "Apply Now" button on available stall type
 2. Application modal opens with form:
    - **Stall Type** - Dropdown (Wet, Dry, Apparel)
-   - **Business Name** - Text input
-   - **Business Logo** - Optional image upload (PNG, JPG, GIF, WebP)
-   - **Business Description** - Textarea
-   - **Business Permit** - Required file upload (PDF, doc)
-   - **Valid ID** - Required file upload (PDF, doc)
-   - **Digital Signature** - Required file upload (PDF, image)
-3. Submit application
+   - **Business Name** - Required text input
+   - **Business Logo** - Optional image upload
+   - **Business Description** - Required textarea
+   - **Business Permit** - Required file upload
+   - **Valid ID** - Required file upload
+   - **Digital Signature** - Required file upload
+3. Submit application with all required documents
 4. Application status: PENDING
 5. Admin reviews and approves/rejects
 6. Upon approval, stall is assigned and lease is created
 
 **Features:**
 - Real-time validation
+- File type/size restrictions
+- Application ID generation
+- Upload storage in dedicated directory
 - File type/size restrictions
 - Application ID generated
 - Confirmation notification
@@ -463,31 +529,9 @@ Inspired by Facebook Messenger with two-panel layout:
 **Features:**
 - Welcome message
 - Project overview
-- Login/Register buttons
+- Login button
 - Feature highlights
 - Responsive design for mobile/desktop
-
----
-
-#### `/public/register.php`
-**Purpose**: New user registration
-
-**Fields:**
-- First Name (required)
-- Last Name (required)
-- Email (required, validated)
-- Phone (optional)
-- Role Selection (Admin or Tenant)
-- Business Name (required for Tenant)
-- Password (required, secure hash with bcrypt)
-- Confirm Password (verification)
-- Terms acceptance checkbox
-
-**Validation:**
-- Email uniqueness check
-- Password strength requirements
-- Input sanitization
-- Email format validation
 
 ---
 
@@ -498,39 +542,20 @@ Inspired by Facebook Messenger with two-panel layout:
 1. Email and password input
 2. Password verification against bcrypt hash
 3. Session creation if valid
-4. Redirect to 2FA verification or dashboard
+4. Redirect to role-specific dashboard
 5. Failed login tracking and security alerts
 
 ---
 
-#### `/public/verify_2fa.php`
-**Purpose**: Two-factor authentication
+#### `/public/logout.php`
+**Purpose**: User logout
 
 **Process:**
-1. Code sent to email or SMS (configurable)
-2. User enters 6-digit verification code
-3. Code validation against stored code
-4. Session finalization upon successful verification
-5. Redirect to relevant dashboard
+1. Destroy user session
+2. Clear session cookies
+3. Redirect to login page
 
 ---
-
-#### `/public/forgot_password.php`
-**Purpose**: Password recovery initiation
-
-**Process:**
-1. User enters email address
-2. Verification code sent to email
-3. Redirect to reset password page
-
----
-
-#### `/public/reset_password.php`
-**Purpose**: Complete password reset
-
-**Fields:**
-- Verification code (from email)
-- New password
 - Confirm password
 
 **Validation:**
@@ -555,8 +580,7 @@ Inspired by Facebook Messenger with two-panel layout:
 
 ### 1. **User Management**
 - ✅ User registration with role assignment (Admin, Tenant)
-- ✅ Email-based authentication
-- ✅ Two-factor authentication (2FA)
+- ✅ Email-based authentication with 7-digit code system
 - ✅ Password hashing with bcrypt (cost: 12)
 - ✅ Password reset via email
 - ✅ Profile management for each user
@@ -583,13 +607,17 @@ Inspired by Facebook Messenger with two-panel layout:
 - ✅ Document storage and retrieval
 
 ### 4. **Payment Management**
-- ✅ Payment tracking per lease
+- ✅ Payment tracking per lease with receipt generation
 - ✅ Due date management (recurring monthly)
-- ✅ Full payment recording
-- ✅ Partial payment recording with arrear calculation
+- ✅ Full payment recording with 12-digit receipt numbers
+- ✅ Partial payment recording with automatic arrear calculation
+- ✅ Not paid marking with receipt and arrears tracking
 - ✅ Payment method tracking (Cash, Check, Bank Transfer, etc.)
-- ✅ Payment history by tenant
-- ✅ Receipt generation and download
+- ✅ Payment history by tenant with accurate status display
+- ✅ Receipt storage in dedicated database table
+- ✅ Automatic tenant notifications and email receipts
+- ✅ Bootstrap modal-based payment processing
+- ✅ Session-secured payment actions with token validation
 
 ### 5. **Arrears Management**
 - ✅ Automatic arrear calculation from unpaid dues
@@ -688,10 +716,9 @@ session_set_cookie_params([
 - Auto-regeneration of session IDs on login
 
 #### Two-Factor Authentication (2FA)
-- Code sent to registered email or SMS
-- Code expires after time limit (configurable)
-- Prevents unauthorized access even with password compromise
-- Verification required post-login
+- 2FA columns exist in database but public 2FA interface was removed
+- Admin registration uses 7-digit code authentication instead
+- Tenant authentication uses email + 7-digit code from tenant_accounts table
 
 ---
 
@@ -862,14 +889,14 @@ die('Database connection failed. Please try again later.');
 ✅ SQL Injection Prevention (parameterized queries)
 ✅ XSS Prevention (output encoding)
 ✅ CSRF Protection (SameSite cookies)
-✅ Authentication (password hashing + 2FA)
+✅ Authentication (password hashing + 7-digit code system)
 ✅ Authorization (role-based access control)
 ✅ Session Security (HttpOnly, Secure, SameSite)
 ✅ Input Validation (type/format checking)
 ✅ File Upload Security (type/size validation)
 ✅ Error Handling (no detailed error exposure)
 ✅ Secure Headers (X-Frame-Options, CSP, etc.)
-✅ Email Verification (2FA codes)
+✅ Email Verification (7-digit authentication codes)
 ✅ Password Reset Security (token expiration)
 ✅ Activity Logging (audit trails)
 ✅ HTTPS / SSL (recommended for production)
@@ -953,6 +980,36 @@ limit   (int, optional) - Message count limit (default: 50)
 ---
 
 #### **Payment APIs**
+
+##### `POST /api/get_receipt_data.php`
+**Purpose:** Fetch lease and payment data for receipt modal display
+
+**Parameters:**
+```php
+lease_id (int, required) - Lease ID to get receipt data for
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "lease_id": 123,
+  "due_date": "2026-03-01",
+  "amount_due": 5000.00,
+  "total_arrears": 0.00,
+  "monthly_rent": 5000.00,
+  "admin_name": "Admin User",
+  "stall_no": "A001",
+  "business_name": "Sample Business",
+  "tenant_name": "John Doe"
+}
+```
+
+**Processing:**
+1. Validate lease exists and belongs to admin's access
+2. Get current unpaid due for the lease
+3. Retrieve lease, tenant, and stall information
+4. Return formatted data for receipt modal population
 
 ##### `POST /api/pay_arrear.php`
 **Purpose:** Record arrear payment from tenant
@@ -1317,7 +1374,7 @@ APP_DEBUG=true
 APP_NAME=RentFlow
 
 PENALTY_RATE=0.02
-2FA_EXPIRY=600
+# 2FA_EXPIRY=600 (Not currently used - authentication uses 7-digit codes)
 ```
 
 ---
@@ -1464,7 +1521,7 @@ if ($mail->send()) {
 **Email Types Sent:**
 - Registration confirmation
 - Password reset link
-- 2FA verification code
+- 7-digit authentication code
 - Application notification
 - Payment confirmation
 - Arrear notifications
@@ -1528,9 +1585,9 @@ APP_DEBUG=true
 APP_NAME=RentFlow
 APP_URL=http://localhost/rentflow/
 
-# Feature Flags
-2FA_ENABLED=true
-2FA_EXPIRY=600
+# Feature Flags (Currently unused - authentication uses 7-digit codes)
+# 2FA_ENABLED=true
+# 2FA_EXPIRY=600
 
 # Penalty Configuration
 PENALTY_RATE=0.02
@@ -1974,9 +2031,11 @@ exportChartAsPNG(chartId)        // Export to image
 exportChartAsPDF(chartId)        // Export to PDF
 ```
 
-#### Verification (`verify_2fa.js`)
+#### Verification (`verify_2fa.js`) - Currently Unused
 
 ```javascript
+// Note: This file exists but is not used in current implementation
+// Authentication now uses 7-digit codes instead of 2FA
 handleCodeInput()                // Handle code entry
 submitCode()                     // Submit verification
 autoFocusNextInput()             // Tab between inputs
@@ -2065,17 +2124,28 @@ Stores user account information
 
 ```sql
 id                  INT PRIMARY KEY AUTO_INCREMENT
+tenant_id           VARCHAR(4) UNIQUE  -- 4-character tenant ID (T001, etc.)
+role                ENUM('tenant','admin','treasury') NOT NULL
 email               VARCHAR(255) UNIQUE NOT NULL
-password            VARCHAR(255) NOT NULL  -- bcrypt hash
 first_name          VARCHAR(100) NOT NULL
 last_name           VARCHAR(100) NOT NULL
-phone               VARCHAR(20)
-business_name       VARCHAR(255)  -- For tenants
-role                ENUM('admin','tenant') NOT NULL
-profile_photo       VARCHAR(255)  -- Optional
-status              ENUM('active','inactive','suspended') DEFAULT 'active'
-created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+password_hash       VARCHAR(255)  -- bcrypt hash
+tenant_code_hash    VARCHAR(255)  -- 7-digit code hash for tenant login
+status              ENUM('active','inactive','lease_ended') DEFAULT 'active'
+created_at          DATETIME DEFAULT CURRENT_TIMESTAMP
+confirmed           TINYINT(1) DEFAULT 0
+cover_photo         VARCHAR(255)
+profile_photo       VARCHAR(255)
+location            VARCHAR(255)
+business_name       VARCHAR(255)
+two_factor_enabled  TINYINT(1) DEFAULT 0
+remember_device_enabled TINYINT(1) DEFAULT 0
+password_reset_otp  VARCHAR(255)
+password_reset_expires DATETIME
+password_reset_requested_at DATETIME
+notif_email         TINYINT(1) DEFAULT 1
+notif_sms           TINYINT(1) DEFAULT 0
+notify_email_on_messages TINYINT(1) DEFAULT 1
 ```
 
 #### `stalls`
@@ -2128,11 +2198,32 @@ Recorded payments
 ```sql
 id                  INT PRIMARY KEY AUTO_INCREMENT
 lease_id            INT NOT NULL
+due_id              INT  -- Reference to specific due record
 amount              DECIMAL(10,2) NOT NULL
 payment_date        DATE NOT NULL
-method              VARCHAR(50)  -- Cash, Check, Bank Transfer, etc.
-reference_no        VARCHAR(100)  -- Check no., bank ref., etc.
-notes               TEXT
+method              ENUM('cash','manual','partial') NOT NULL
+transaction_id      VARCHAR(64) UNIQUE
+remarks             VARCHAR(255)  -- Payment status/remarks
+receipt_path        VARCHAR(255)  -- Path to generated receipt
+FOREIGN KEY (lease_id) REFERENCES leases(id)
+FOREIGN KEY (due_id) REFERENCES dues(id)
+```
+
+#### `receipts`
+Payment receipt records with 12-digit unique numbers
+
+```sql
+id                  INT PRIMARY KEY AUTO_INCREMENT
+receipt_no          VARCHAR(12) NOT NULL UNIQUE
+lease_id            INT NOT NULL
+payment_date        DATE NOT NULL
+received_from       VARCHAR(255) NOT NULL
+stall_no            VARCHAR(50) NOT NULL
+business_name       VARCHAR(255) NOT NULL
+payment_for         VARCHAR(255) NOT NULL
+amount_paid         DECIMAL(10,2) NOT NULL
+total_balance       DECIMAL(10,2) NOT NULL
+status              ENUM('Full Payment', 'Partial Payment', 'Not Paid') NOT NULL
 created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 FOREIGN KEY (lease_id) REFERENCES leases(id)
 ```
@@ -2278,7 +2369,7 @@ RentFlow is a comprehensive, professionally-built property management system tha
 
 ✅ **Robust Backend** - PDO-based PHP with secure database management
 ✅ **Rich Features** - Payments, applications, messaging, reporting
-✅ **Strong Security** - SQL injection prevention, XSS protection, CSRF mitigation, bcrypt passwords, 2FA
+✅ **Strong Security** - SQL injection prevention, XSS protection, CSRF mitigation, bcrypt passwords, 7-digit code authentication
 ✅ **Scalable API** - RESTful endpoints for all major operations
 ✅ **Custom Design** - Professional UI framework with responsive design
 ✅ **User-Centric** - Separate portals for admins and tenants
