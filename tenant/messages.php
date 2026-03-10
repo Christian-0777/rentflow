@@ -33,8 +33,7 @@ $conversations = $threads->fetchAll(PDO::FETCH_ASSOC);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css">
-</head>
+  <link rel="stylesheet" href="/rentflow/public/assets/css/tenant-bootstrap.css"><!-- Pace.js CSS --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@latest/pace-theme-default.min.css"><!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body>
 
 <!-- Navigation Bar -->

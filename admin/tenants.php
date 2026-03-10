@@ -93,7 +93,7 @@ foreach ($rows as $r) {
       opacity: 0.8;
     }
   </style>
-</head>
+<!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body class="admin">
 
 <header class="header">
@@ -692,3 +692,4 @@ function htmlEscape(text) {
 </script>
 </body>
 </html>
+

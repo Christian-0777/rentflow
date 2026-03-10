@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .password-hint { font-size: 12px; color: #666; margin-top: 4px; }
     .alert.warning { background-color: #fff3cd; border: 1px solid #ffc107; }
   </style>
-</head>
+<!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body class="admin">
 <header class="header">
   <h1 class="site-title">RentFlow</h1>

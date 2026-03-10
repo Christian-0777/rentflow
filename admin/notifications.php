@@ -41,8 +41,7 @@ if ($to) {
   <link rel="icon" type="image/png" href="public/assets/img/icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"><!-- Pace.js CSS --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@latest/pace-theme-default.min.css"><!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body class="admin">
 
 <!-- 🔹 Integrated Header -->
@@ -307,3 +306,4 @@ document.addEventListener('click', function(event) {
 
 </body>
 </html>
+

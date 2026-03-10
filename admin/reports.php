@@ -216,7 +216,7 @@ $total_paid_arrears = array_sum(array_column($paid_arrears, 'amount'));
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf@0.10.1/dist/html2pdf.bundle.min.js"></script>
-</head>
+<!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body class="admin">
 
 <!-- 🔹 Integrated Header -->
@@ -1033,3 +1033,4 @@ $total_paid_arrears = array_sum(array_column($paid_arrears, 'amount'));
 
 </body>
 </html>
+

@@ -94,7 +94,7 @@ try {
             .code-box { background-color: #f8f9fa; border: 2px solid #0B3C5D; padding: 15px; border-radius: 5px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; font-family: monospace; }
             .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
         </style>
-    </head>
+    <!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
     <body>
         <div class='container'>
             <div class='header'>

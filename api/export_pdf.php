@@ -7,6 +7,7 @@ $dataUrl = $_POST['dataUrl'] ?? '';
 $name = $_POST['name'] ?? 'chart';
 
 header('Content-Type: text/html; charset=utf-8');
-echo "<html><head><title>$name</title></head><body>";
+echo "<html><head><title>$name</title><!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head><body>";
 echo "<img src='".htmlspecialchars($dataUrl)."' style='width:100%'>";
 echo "</body></html>";
+

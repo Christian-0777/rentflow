@@ -22,7 +22,7 @@ if (!$p) { die('Not found.'); }
 ?>
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Receipt #<?= $paymentId ?></title></head>
+<head><meta charset="utf-8"><title>Receipt #<?= $paymentId ?></title><!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body>
   <h1>RentFlow Receipt</h1>
   <p><strong>Tenant:</strong> <?= htmlspecialchars($p['full_name']) ?> (<?= htmlspecialchars($p['business_name']) ?>)</p>
@@ -35,3 +35,4 @@ if (!$p) { die('Not found.'); }
   <p>Thank you for your payment.</p>
 </body>
 </html>
+

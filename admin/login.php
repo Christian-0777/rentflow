@@ -53,7 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/auth-common.css">
   <link rel="stylesheet" href="/rentflow/public/assets/css/login.css">
-</head>
+  <!-- Pace.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@latest/pace-theme-default.min.css">
+  <!-- Pace.js JS -->
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
+<!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body class="admin">
 
 <!-- 🔹 Integrated Header -->
@@ -89,3 +93,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 </html>
+

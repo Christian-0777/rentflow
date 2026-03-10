@@ -270,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type'])) {
                 .receipt-details { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
                 .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
             </style>
-        </head>
+        <!-- Pace.js JS --><script src=\"https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js\"></script></head>
         <body>
             <div class='container'>
                 <div class='header'>
@@ -477,7 +477,7 @@ $arrears_rows = $pdo->query("
             opacity: 0.8;
         }
     </style>
-</head>
+<!-- Pace.js JS --><script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script></head>
 <body class="admin">
 <header class="header">
     <h1 class="site-title">RentFlow</h1>
@@ -948,69 +948,6 @@ function submitPayment() {
     .catch(err => alert('Network error: ' + err.message));
 }
 
-document.getElementById('paymentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const data = new FormData(form);
-    fetch('', {
-        method: 'POST',
-        headers: {'X-Requested-With': 'XMLHttpRequest'},
-        body: data
-    })
-    .then(r => r.json())
-    .then(json => {
-        if (json.success) {
-            // reload to show updated records
-            location.reload();
-        } else {
-            alert('Error: ' + (json.error || 'unknown'));
-        }
-    })
-    .catch(err => alert('Network error: ' + err.message));
-});
-
-function openPaymentModal_old(action, leaseId) {
-    if (!action) return;
-    
-    const modal = document.getElementById('paymentModal');
-    const form = document.getElementById('paymentForm');
-    const partialSection = document.getElementById('partialPaidSection');
-    const modalTitle = document.getElementById('modalTitle');
-    
-    // Set values
-    document.getElementById('actionType').value = action;
-    document.getElementById('leaseIdInput').value = leaseId;
-    
-    // Set next month as default due date
-    const nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    document.getElementById('nextDueDate').value = nextMonth.toISOString().split('T')[0];
-    
-    // Update modal title and show/hide partial payment section
-    if (action === 'paid') {
-        modalTitle.textContent = 'Mark as Paid';
-        partialSection.style.display = 'none';
-        document.getElementById('amountPaid').required = false;
-    } else if (action === 'partial') {
-        modalTitle.textContent = 'Mark as Partial Paid';
-        partialSection.style.display = 'block';
-        document.getElementById('amountPaid').required = true;
-    } else if (action === 'notpaid') {
-        modalTitle.textContent = 'Mark as Not Paid';
-        partialSection.style.display = 'none';
-        document.getElementById('amountPaid').required = false;
-    }
-    
-    // Reset and show modal
-    form.reset();
-    document.getElementById('nextDueDate').value = nextMonth.toISOString().split('T')[0];
-    modal.style.display = 'block';
-}
-
-function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
-}
-
 // ============================================================
 // ARREARS HISTORY MODAL FUNCTIONS
 // ============================================================
@@ -1139,12 +1076,8 @@ function htmlEscape(text) {
 
 // Close modals when clicking outside
 window.onclick = function(event) {
-    const paymentModal = document.getElementById('paymentModal');
     const arrearsModal = document.getElementById('arrearsHistoryModal');
     
-    if (event.target === paymentModal) {
-        paymentModal.style.display = 'none';
-    }
     if (event.target === arrearsModal) {
         arrearsModal.style.display = 'none';
     }
@@ -1153,3 +1086,4 @@ window.onclick = function(event) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
