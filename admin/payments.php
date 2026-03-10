@@ -419,6 +419,7 @@ $arrears_rows = $pdo->query("
 <head>
     <meta charset="UTF-8">
     <title>Payments & Arrears - RentFlow</title>
+    <link rel="icon" type="image/png" href="public/assets/img/icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">

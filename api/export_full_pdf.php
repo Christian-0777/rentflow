@@ -17,22 +17,16 @@ require_once __DIR__.'/../admin/reports.php';
 // Get the captured HTML
 $html = ob_get_clean();
 
-// Clean the HTML: remove header, footer, buttons, nav
+// Clean the HTML: remove buttons, nav
 $dom = new DOMDocument();
 libxml_use_internal_errors(true); // Suppress warnings for malformed HTML
 $dom->loadHTML($html);
 libxml_clear_errors();
 
-// Remove header
-$header = $dom->getElementsByTagName('header');
-if ($header->length > 0) {
-    $header->item(0)->parentNode->removeChild($header->item(0));
-}
-
-// Remove footer
-$footer = $dom->getElementsByTagName('footer');
-if ($footer->length > 0) {
-    $footer->item(0)->parentNode->removeChild($footer->item(0));
+// Remove navigation
+$nav = $dom->getElementsByTagName('nav');
+if ($nav->length > 0) {
+    $nav->item(0)->parentNode->removeChild($nav->item(0));
 }
 
 // Remove all buttons and export sections

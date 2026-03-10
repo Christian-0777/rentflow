@@ -7,11 +7,12 @@ const outputFile = process.argv[3];
 
 (async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
-  await page.goto('file://' + path.resolve(inputFile), { waitUntil: 'networkidle0' });
+  await page.goto('file://' + path.resolve(inputFile), { waitUntil: 'load' });
+  
   await page.pdf({
     path: outputFile,
     format: 'A4',

@@ -208,6 +208,7 @@ $total_paid_arrears = array_sum(array_column($paid_arrears, 'amount'));
 <head>
   <meta charset="UTF-8">
   <title>Reports - RentFlow</title>
+  <link rel="icon" type="image/png" href="public/assets/img/icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/rentflow/public/assets/css/layout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -243,7 +244,7 @@ $total_paid_arrears = array_sum(array_column($paid_arrears, 'amount'));
   <!-- � Full Page Export Buttons -->
   <section class="export-full-page">
     <h3>Export Full Report</h3>
-    <a href="../api/export_full_pdf.php" class="btn">📑 Export as PDF</a>
+    <button class="btn" onclick="exportPageAsPDF()">📑 Export as PDF</button>
   </section>
 
   <!-- 👥 New Tenants Section -->
@@ -976,22 +977,55 @@ $total_paid_arrears = array_sum(array_column($paid_arrears, 'amount'));
       return;
     }
     
-    const opt = {
-      margin: 10,
-      filename: 'rentflow_report_' + new Date().toISOString().split('T')[0] + '.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-    };
+    // Temporarily hide all buttons and navigation elements
+    const buttons = document.querySelectorAll('button, .btn, nav, .export-full-page, .export-buttons, .chart-header .btn');
+    buttons.forEach(btn => btn.style.display = 'none');
     
-    html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .catch(error => {
-        console.error('PDF export error:', error);
-        alert('Error exporting PDF. Please try again.');
+    // Capture the page as image
+    html2canvas(element, { 
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    }).then(canvas => {
+      // Show buttons again
+      buttons.forEach(btn => btn.style.display = '');
+      
+      // Create PDF
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
       });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      
+      let position = 0;
+      
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      // Save PDF
+      pdf.save('rentflow_report_' + new Date().toISOString().split('T')[0] + '.pdf');
+    }).catch(error => {
+      // Show buttons again in case of error
+      buttons.forEach(btn => btn.style.display = '');
+      console.error('PDF export error:', error);
+      alert('Error exporting PDF. Please try again.');
+    });
   }
 
 
